@@ -1,113 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
+@plugin "@tailwindcss/forms";
 
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@theme {
+  /* Colors */
+  --color-background: #FFF9E8;
+  --color-on-background: #1E1C10;
+  --color-surface: #FFF9E8;
+  --color-surface-bright: #FFF9E8;
+  --color-surface-dim: #E0DAC6;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #FAF4DF;
+  --color-surface-container: #F4EEDA;
+  --color-surface-container-high: #EEE8D4;
+  --color-surface-container-highest: #E8E2CF;
+  --color-primary: #930000;
+  --color-primary-container: #C00000;
+  --color-on-primary: #FFFFFF;
+  --color-secondary: #705D00;
+  --color-secondary-container: #FCD400;
+  --color-on-secondary: #FFFFFF;
+  --color-on-secondary-container: #6E5C00;
+  --color-on-surface: #1E1C10;
+  --color-on-surface-variant: #5D3F3B;
+  --color-outline: #926F69;
+  --color-outline-variant: #E7BDB6;
+  --color-error: #BA1A1A;
+  --color-on-error: #FFFFFF;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Typography */
+  --font-headline: "Space Grotesk", sans-serif;
+  --font-body: "Work Sans", sans-serif;
+  --font-label: "Work Sans", sans-serif;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Border radius — diseño cómico sin bordes redondeados */
+  --radius-DEFAULT: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Box shadows */
+  --shadow-comic: 8px 8px 0px 0px #1E1C10;
+  --shadow-comic-sm: 4px 4px 0px 0px #1E1C10;
+  --shadow-comic-red: 4px 4px 0px 0px #930000;
+  --shadow-comic-none: 0px 0px 0px 0px #1E1C10;
+
+  /* Letter spacing */
+  --tracking-tighter: -0.02em;
+  --tracking-tight: -0.01em;
+  --tracking-widest: 0.1em;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-body overflow-x-hidden;
+  }
+  ::selection {
+    @apply bg-secondary-container text-on-surface;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+@layer components {
+  .comic-shadow {
+    box-shadow: 8px 8px 0px 0px #1E1C10;
   }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  .comic-shadow-sm {
+    box-shadow: 4px 4px 0px 0px #1E1C10;
   }
-}
-
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  .comic-shadow-red {
+    box-shadow: 4px 4px 0px 0px #930000;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+  .gutter-line {
+    border-bottom: 2px solid #1E1C10;
   }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  .btn-primary {
+    @apply bg-primary text-on-primary font-headline font-black uppercase tracking-widest
+           border-2 border-on-surface
+           transition-all duration-75 cursor-pointer;
+    box-shadow: 4px 4px 0px 0px #1E1C10;
+  }
+  .btn-primary:hover {
+    @apply -translate-x-0.5 -translate-y-0.5;
+  }
+  .btn-primary:active {
+    @apply translate-x-1 translate-y-1;
+    box-shadow: none;
+  }
+  .btn-secondary {
+    @apply bg-secondary-container text-on-surface font-headline font-black uppercase tracking-widest
+           border-2 border-on-surface
+           transition-all duration-75 cursor-pointer;
+    box-shadow: 4px 4px 0px 0px #1E1C10;
+  }
+  .btn-secondary:hover {
+    @apply -translate-x-0.5 -translate-y-0.5;
+  }
+  .btn-secondary:active {
+    @apply translate-x-1 translate-y-1;
+    box-shadow: none;
+  }
+  .nav-link {
+    @apply font-headline uppercase tracking-tighter font-bold text-on-surface
+           px-2 py-1 transition-colors duration-75 cursor-pointer;
+  }
+  .nav-link:hover {
+    @apply bg-secondary-container text-on-surface;
+  }
+  .nav-link.active {
+    @apply bg-secondary-container border-2 border-on-surface;
+  }
+  .input-comic {
+    @apply border-2 border-on-surface bg-surface-container-lowest font-body font-bold uppercase text-sm
+           focus:border-primary focus:bg-surface-bright focus:ring-0
+           transition-colors;
+  }
+  .product-card {
+    @apply relative bg-surface-container-lowest border-2 border-on-surface
+           hover:-translate-x-1 hover:-translate-y-1 transition-transform duration-75
+           flex flex-col overflow-hidden cursor-pointer;
+    box-shadow: 4px 4px 0px 0px #1E1C10;
+  }
+  .badge {
+    @apply inline-block px-2 py-0.5 text-xs font-bold font-headline uppercase border-0;
+  }
 }
