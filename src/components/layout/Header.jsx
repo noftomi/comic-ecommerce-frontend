@@ -78,9 +78,16 @@ export default function Header() {
 
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="hidden md:block font-headline font-black uppercase text-sm">
+                <NavLink
+                  to="/perfil"
+                  className={({ isActive }) =>
+                    isActive
+                      ? 'nav-link active hidden md:block text-sm'
+                      : 'nav-link hidden md:block text-sm'
+                  }
+                >
                   {user.name || user.email}
-                </span>
+                </NavLink>
                 <button
                   type="button"
                   onClick={handleLogout}

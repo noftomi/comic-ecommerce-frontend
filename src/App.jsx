@@ -10,6 +10,8 @@ import Catalog from './pages/Catalog'
 import ProductDetail from './pages/ProductDetail'
 import Register from './pages/Register'
 import Admin from './pages/Admin'
+import Profile from './pages/Profile'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 import useCartStore from './store/cartStore'
 
 function AppShell() {
@@ -29,13 +31,21 @@ function AppShell() {
       <Header />
       <CartDrawer />
       <LoginModal />
-      <div key={location.pathname} className="flex-1 animate-[fadeIn_0.15s_ease]">
+      <div key={location.pathname} className="flex-1 flex flex-col animate-[fadeIn_0.15s_ease]">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin" element={<Admin />} />
+          <Route
+            path="/perfil"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
