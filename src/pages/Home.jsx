@@ -105,7 +105,7 @@ export default function Home() {
                 x="50"
                 y="56"
                 textAnchor="middle"
-                className="font-headline text-[22px] font-black"
+                className="font-headline text-[18px] font-black"
                 fill="#1E1C10"
               >
                 NEW
