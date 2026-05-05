@@ -13,6 +13,7 @@ import Admin from './pages/Admin'
 import Profile from './pages/Profile'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import useCartStore from './store/cartStore'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function AppShell() {
   const location = useLocation()
@@ -33,21 +34,34 @@ function AppShell() {
       <LoginModal />
       <div key={location.pathname} className="flex-1 flex flex-col animate-[fadeIn_0.15s_ease]">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalog" element={<Catalog />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route
-            path="/perfil"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/catalog" element={<Catalog />} />
+  <Route path="/product/:id" element={<ProductDetail />} />
+  <Route path="/register" element={<Register />} />
+
+  {/* Nivel A — cualquier usuario logueado */}
+  <Route element={<ProtectedRoute allowedRoles={["CLIENT", "SELLER", "ADMIN"]} />}>
+    <Route path="/profile" element={<div>Perfil</div>} />
+    <Route path="/cart" element={<div>Carrito</div>} />
+    <Route path="/favorites" element={<div>Favoritos</div>} />
+    <Route path="/checkout" element={<div>Checkout</div>} />
+    <Route path="/orders" element={<div>Historial de compras</div>} />
+  </Route>
+
+  {/* Nivel B — solo SELLER */}
+  <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
+    <Route path="/publish" element={<div>Publicar artículo</div>} />
+    <Route path="/sales" element={<div>Historial de ventas</div>} />
+  </Route>
+
+  {/* Nivel C — solo ADMIN */}
+  <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+    <Route path="/admin" element={<Admin />} />
+    <Route path="/admin/users" element={<div>Gestión de usuarios</div>} />
+  </Route>
+
+  <Route path="*" element={<Navigate to="/" />} />
+</Routes>
       </div>
       <Footer />
     </div>
