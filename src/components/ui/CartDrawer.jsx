@@ -1,5 +1,6 @@
 import { ShoppingCart, Trash2, X } from 'lucide-react'
 import useCartStore from '../../store/cartStore'
+import { useAuth } from '../../context/AuthContext'
 
 function formatPrice(value) {
   return `$${value.toFixed(2)}`
@@ -12,6 +13,8 @@ export default function CartDrawer() {
   const removeFromCart = useCartStore((state) => state.removeFromCart)
   const updateQty = useCartStore((state) => state.updateQty)
   const total = useCartStore((state) => state.total())
+  const { user } = useAuth()
+  const openLogin = useCartStore((state) => state.openLogin)
 
   return (
     <>
@@ -48,11 +51,24 @@ export default function CartDrawer() {
         </div>
 
         <div className="flex-grow space-y-4 overflow-y-auto p-6">
-          {items.length === 0 ? (
-            <div className="border-2 border-on-surface bg-surface-container p-4 text-center font-body text-sm font-bold uppercase">
-              Tu carrito está vacío.
-            </div>
-          ) : (
+         {!user ? (
+        <div className="flex flex-col items-center gap-4 border-2 border-on-surface bg-surface-container p-6 text-center">
+          <p className="font-body text-sm font-bold uppercase">
+            Debés loguearte para acceder al carrito.
+          </p>
+          <button
+            type="button"
+            onClick={() => { closeCart(); openLogin(); }}
+            className="btn-primary px-6 py-2 text-sm"
+          >
+            Iniciar sesión
+          </button>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="border-2 border-on-surface bg-surface-container p-4 text-center font-body text-sm font-bold uppercase">
+          Tu carrito está vacío.
+        </div>
+      ) : (
             items.map((item) => (
               <div key={item.id} className="flex gap-4 border-2 border-on-surface bg-white p-3">
                 <img
@@ -103,22 +119,24 @@ export default function CartDrawer() {
           )}
         </div>
 
-        <div className="space-y-4 border-t-2 border-on-surface p-6">
-          <div className="flex items-center justify-between font-headline text-2xl font-black uppercase">
-            <span>Total:</span>
-            <span>{formatPrice(total)}</span>
-          </div>
-          <button type="button" className="btn-primary w-full py-4 text-xl">
-            PROCEDER AL PAGO
-          </button>
-          <button
-            type="button"
-            onClick={closeCart}
-            className="block w-full text-center text-sm font-bold uppercase underline transition-colors duration-75 hover:text-primary"
-          >
-            Seguir comprando
-          </button>
+    {user && (
+      <div className="space-y-4 border-t-2 border-on-surface p-6">
+        <div className="flex items-center justify-between font-headline text-2xl font-black uppercase">
+          <span>Total:</span>
+          <span>{formatPrice(total)}</span>
         </div>
+        <button type="button" className="btn-primary w-full py-4 text-xl">
+          PROCEDER AL PAGO
+        </button>
+        <button
+          type="button"
+          onClick={closeCart}
+          className="block w-full text-center text-sm font-bold uppercase underline transition-colors duration-75 hover:text-primary"
+        >
+          Seguir comprando
+        </button>
+      </div>
+    )}
       </aside>
     </>
   )
