@@ -72,7 +72,7 @@ export default function Register() {
         password: form.password,
         esSeller: form.esSeller,
         ...(form.esSeller && {
-          cuil: form.cuil.trim(),
+          cuil: form.cuil.replace(/\D/g, ""),
           pais: form.pais === "OTHER" ? form.paisCustom.trim() : form.pais,
           ...(form.telefono.trim() && { telefono: form.telefono.trim() }),
         }),
@@ -405,14 +405,14 @@ export default function Register() {
                         onChange={handleChange}
                       >
                         <option value="">Seleccioná tu país</option>
-                        <option value="AR">Argentina</option>
-                        <option value="MX">México</option>
-                        <option value="CL">Chile</option>
-                        <option value="CO">Colombia</option>
-                        <option value="UY">Uruguay</option>
-                        <option value="PE">Perú</option>
-                        <option value="ES">España</option>
-                        <option value="US">Estados Unidos</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="México">México</option>
+                        <option value="Chile">Chile</option>
+                        <option value="Colombia">Colombia</option>
+                        <option value="Uruguay">Uruguay</option>
+                        <option value="Perú">Perú</option>
+                        <option value="España">España</option>
+                        <option value="Estados Unidos">Estados Unidos</option>
                         <option value="OTHER">Otro</option>
                       </select>
                       {errors.pais && (
