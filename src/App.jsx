@@ -11,7 +11,6 @@ import ProductDetail from './pages/ProductDetail'
 import Register from './pages/Register'
 import Admin from './pages/Admin'
 import Profile from './pages/Profile'
-import ProtectedRoute from './components/auth/ProtectedRoute'
 import useCartStore from './store/cartStore'
 import ProtectedRoute from './components/ProtectedRoute'
 
