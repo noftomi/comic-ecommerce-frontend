@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import { X, LayoutDashboard, BookOpen, ShoppingBag, Bell, Pencil } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { X, LayoutDashboard, BookOpen, ShoppingBag, Bell, Pencil, Heart } from 'lucide-react'
 
 function Avatar({ name, avatarUrl }) {
   if (avatarUrl) {
@@ -98,6 +98,19 @@ export default function ProfileSidebar({ isDrawerOpen, onClose, onEditProfile })
         >
           <LayoutDashboard size={20} />
           Panel
+        </NavLink>
+
+        <NavLink
+          to="/perfil/favoritos"
+          onClick={onClose}
+          className={({ isActive }) =>
+            isActive
+              ? 'flex items-center gap-4 bg-primary-container text-on-primary border-l-8 border-on-surface py-4 px-6 font-headline font-black uppercase tracking-widest text-sm'
+              : 'flex items-center gap-4 text-on-surface py-4 px-6 border-b-2 border-on-surface font-headline font-black uppercase tracking-widest text-sm hover:bg-secondary-container hover:translate-x-1 transition-all'
+          }
+        >
+          <Heart size={20} />
+          Mis Favoritos
         </NavLink>
 
         {futureNavItems.map(({ icon: Icon, label }) => (
