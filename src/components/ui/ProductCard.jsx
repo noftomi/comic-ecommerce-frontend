@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import useCartStore from '../../store/cartStore'
+import useFavoritesStore from '../../store/favoritesStore'
 import { useAuth } from '../../context/AuthContext'
-import { addFavorite, removeFavorite, getFavorites } from '../../services/favoritesService'
 
 function formatPrice(value) {
   return `$${value.toFixed(2)}`
@@ -27,15 +26,9 @@ export default function ProductCard({ product }) {
   const openCart = useCartStore((state) => state.openCart)
   const openLogin = useCartStore((state) => state.openLogin)
   const { user } = useAuth()
-  const [isFavorite, setIsFavorite] = useState(false)
-
-  useEffect(() => {
-    if (user && product) {
-      getFavorites().then((favs) => {
-        setIsFavorite(favs.some((f) => f.id === product.id))
-      })
-    }
-  }, [user, product])
+  const isFavorite = useFavoritesStore((state) => state.isFavorite(product.id))
+  const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem)
+  const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem)
 
   const handleAddToCart = (event) => {
     event.stopPropagation()
@@ -47,11 +40,9 @@ export default function ProductCard({ product }) {
     event.stopPropagation()
     if (!user) { openLogin(); return }
     if (isFavorite) {
-      await removeFavorite(product.id)
-      setIsFavorite(false)
+      await removeFavoriteItem(product.id)
     } else {
-      await addFavorite(product.id)
-      setIsFavorite(true)
+      await addFavoriteItem(product.id)
     }
   }
 

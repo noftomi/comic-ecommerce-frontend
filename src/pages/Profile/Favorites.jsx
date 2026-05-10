@@ -1,25 +1,17 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
-import { getFavorites, removeFavorite } from '../../services/favoritesService'
 import useCartStore from '../../store/cartStore'
+import useFavoritesStore from '../../store/favoritesStore'
 
 export default function ProfileFavorites() {
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
+  const items = useFavoritesStore((state) => state.favorites)
+  const loading = useFavoritesStore((state) => state.fetching)
+  const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem)
   const addToCart = useCartStore((state) => state.addToCart)
   const openCart = useCartStore((state) => state.openCart)
 
-  useEffect(() => {
-    getFavorites()
-      .then(setItems)
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false))
-  }, [])
-
   const handleRemove = async (comicId) => {
-    await removeFavorite(comicId)
-    setItems((prev) => prev.filter((item) => item.id !== comicId))
+    await removeFavoriteItem(comicId)
   }
 
   const handleAddToCart = (item) => {

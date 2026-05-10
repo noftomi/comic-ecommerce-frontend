@@ -13,13 +13,18 @@ import ProductDetail from './pages/ProductDetail'
 import Register from './pages/Register'
 import Admin from './pages/Admin'
 import Profile from './pages/Profile'
-import ProfileFavorites from './pages/profile/Favorites'
+import ProfileFavorites from './pages/Profile/Favorites'
 import useCartStore from './store/cartStore'
+import useFavoritesStore from './store/favoritesStore'
+import { useAuth } from './context/AuthContext'
 
 function AppShell() {
   const location = useLocation()
+  const { user } = useAuth()
   const isCartOpen = useCartStore((state) => state.isOpen)
   const isLoginOpen = useCartStore((state) => state.isLoginOpen)
+  const fetchFavorites = useFavoritesStore((state) => state.fetchFavorites)
+  const clearFavorites = useFavoritesStore((state) => state.clearFavorites)
 
   useEffect(() => {
     document.body.style.overflow = isCartOpen || isLoginOpen ? 'hidden' : ''
@@ -27,6 +32,11 @@ function AppShell() {
       document.body.style.overflow = ''
     }
   }, [isCartOpen, isLoginOpen])
+
+  useEffect(() => {
+    if (user) fetchFavorites()
+    else clearFavorites()
+  }, [user])
 
   return (
     <div className="min-h-screen flex flex-col">

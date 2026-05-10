@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import useCartStore from '../../store/cartStore'
-import { getFavorites, removeFavorite } from '../../services/favoritesService'
+import useFavoritesStore from '../../store/favoritesStore'
 import { Link } from 'react-router-dom'
 
 export default function FavoritesDrawer() {
@@ -11,22 +10,12 @@ export default function FavoritesDrawer() {
   const closeFavorites = useCartStore((state) => state.closeFavorites)
   const openLogin = useCartStore((state) => state.openLogin)
 
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (isOpen && user) {
-      setLoading(true)
-      getFavorites()
-        .then(setItems)
-        .catch(() => setItems([]))
-        .finally(() => setLoading(false))
-    }
-  }, [isOpen, user])
+  const items = useFavoritesStore((state) => state.favorites)
+  const loading = useFavoritesStore((state) => state.fetching)
+  const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem)
 
   const handleRemove = async (comicId) => {
-    await removeFavorite(comicId)
-    setItems((prev) => prev.filter((item) => item.id !== comicId))
+    await removeFavoriteItem(comicId)
   }
 
   return (
