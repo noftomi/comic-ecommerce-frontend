@@ -7,4 +7,4 @@ const api = axios.create({
 
 export const getReviews = (comicId) => api.get(`/api/comics/${comicId}/reviews`).then(r => r.data)
 export const createReview = (comicId, data) => api.post(`/api/comics/${comicId}/reviews`, data).then(r => r.data)
-export const deleteReview = (reviewId) => api.delete(`/api/reviews/${reviewId}`).then(r => r.data)
+export const deleteReview = (comicId, reviewId) => api.delete(`/api/comics/${comicId}/reviews/${reviewId}`).then(r => r.data)

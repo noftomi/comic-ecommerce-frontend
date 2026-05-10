@@ -11,13 +11,15 @@ function formatPrice(value) {
   return `$${value.toFixed(2)}`
 }
 
-function Star({ filled, onClick, size = 'h-6 w-6' }) {
+function Star({ filled, onClick, onMouseEnter, onMouseLeave, size = 'h-6 w-6' }) {
   return (
     <svg
-      className={`${size} cursor-pointer ${filled ? 'fill-secondary-container' : 'fill-surface-dim'}`}
+      className={`${size} ${onClick ? 'cursor-pointer' : ''} ${filled ? 'fill-secondary-container' : 'fill-surface-dim'}`}
       viewBox="0 0 20 20"
       aria-hidden="true"
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
     </svg>
@@ -109,7 +111,7 @@ export default function ProductDetail() {
   }
 
   const handleDeleteReview = async (reviewId) => {
-    await deleteReview(reviewId)
+    await deleteReview(product.id, reviewId)
     setReviews((prev) => prev.filter((r) => r.id !== reviewId))
   }
 
@@ -235,6 +237,8 @@ export default function ProductDetail() {
                         key={i}
                         filled={i < (hoverRating || rating)}
                         onClick={() => setRating(i + 1)}
+                        onMouseEnter={() => setHoverRating(i + 1)}
+                        onMouseLeave={() => setHoverRating(0)}
                         size="h-7 w-7"
                       />
                     ))}
