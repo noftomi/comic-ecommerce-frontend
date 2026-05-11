@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, Search, ShoppingCart, User, X, LogOut } from 'lucide-react'
+import { Menu, Search, ShoppingCart, User, X, LogOut, Heart } from 'lucide-react'
 import useCartStore from '../../store/cartStore'
 import { useAuth } from '../../context/AuthContext'
 import { logout } from '../../services/authService'
@@ -18,6 +18,7 @@ export default function Header() {
   const openLogin = useCartStore((state) => state.openLogin)
   const totalItems = useCartStore((state) => state.totalItems())
   const { user, setUser } = useAuth()
+  const openFavorites = useCartStore((state) => state.openFavorites)
 
   useEffect(() => {
     setMobileMenuOpen(false)
@@ -63,6 +64,15 @@ export default function Header() {
                 className="w-52 border-0 p-0 bg-transparent font-label font-bold uppercase text-sm tracking-wide placeholder:opacity-70 focus:border-transparent focus:ring-0"
               />
             </div>
+
+          <button
+            type="button"
+            onClick={openFavorites}
+            className="relative p-0.5 transition-all duration-75 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-1 active:translate-y-1"
+            aria-label="Abrir favoritos"
+          >
+            <Heart size={20} className="text-on-surface" />
+          </button>
 
             <button
               type="button"

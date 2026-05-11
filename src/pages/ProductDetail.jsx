@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { products } from '../data/products'
 import useCartStore from '../store/cartStore'
+import { useAuth } from '../context/AuthContext'
+import { addFavorite, removeFavorite, getFavorites } from '../services/favoritesService'
+import { Heart, Share2 } from 'lucide-react'
 
 function formatPrice(value) {
   return `$${value.toFixed(2)}`
@@ -22,15 +25,47 @@ function Star({ filled }) {
 export default function ProductDetail() {
   const { id } = useParams()
   const [qty, setQty] = useState(1)
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [copied, setCopied] = useState(false)
   const product = useMemo(() => products.find((item) => item.id === Number(id)), [id])
   const addToCart = useCartStore((state) => state.addToCart)
   const openCart = useCartStore((state) => state.openCart)
+  const { user } = useAuth()
+  const openLogin = useCartStore((state) => state.openLogin)
+
+  useEffect(() => {
+    if (user && product) {
+      getFavorites().then((favs) => {
+        setIsFavorite(favs.some((f) => f.id === product.id))
+      })
+    }
+  }, [user, product])
 
   const addWithQuantity = () => {
     for (let index = 0; index < qty; index += 1) {
       addToCart(product)
     }
     openCart()
+  }
+
+  const handleFavorite = async () => {
+    if (!user) {
+      openLogin()
+      return
+    }
+    if (isFavorite) {
+      await removeFavorite(product.id)
+      setIsFavorite(false)
+    } else {
+      await addFavorite(product.id)
+      setIsFavorite(true)
+    }
+  }
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   if (!product) {
@@ -65,6 +100,30 @@ export default function ProductDetail() {
           <span className="font-label text-xs font-bold uppercase underline tracking-tight">
             {product.reviews} Reseñas
           </span>
+
+          <button
+            type="button"
+            onClick={handleFavorite}
+            aria-label="Añadir a favoritos"
+            className="p-0.5 transition-transform duration-100 active:scale-125"
+          >
+            <Heart
+              size={20}
+              className={isFavorite ? 'fill-primary text-primary' : 'text-on-surface'}
+            />
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleShare}
+            aria-label="Compartir"
+            className="p-0.5 transition-transform duration-100 active:scale-125"
+          >
+            <Share2 size={20} className="text-on-surface" />
+          </button>
+          {copied && (
+            <span className="text-[10px] font-bold uppercase text-primary">¡URL copiada!</span>
+          )}
         </div>
 
         <p className="max-w-lg font-body text-xs font-bold uppercase italic leading-relaxed opacity-80">

@@ -1,5 +1,8 @@
 import { useNavigate } from 'react-router-dom'
+import { Heart } from 'lucide-react'
 import useCartStore from '../../store/cartStore'
+import useFavoritesStore from '../../store/favoritesStore'
+import { useAuth } from '../../context/AuthContext'
 
 function formatPrice(value) {
   return `$${value.toFixed(2)}`
@@ -21,6 +24,11 @@ export default function ProductCard({ product }) {
   const navigate = useNavigate()
   const addToCart = useCartStore((state) => state.addToCart)
   const openCart = useCartStore((state) => state.openCart)
+  const openLogin = useCartStore((state) => state.openLogin)
+  const { user } = useAuth()
+  const isFavorite = useFavoritesStore((state) => state.isFavorite(product.id))
+  const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem)
+  const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem)
 
   const handleAddToCart = (event) => {
     event.stopPropagation()
@@ -28,16 +36,37 @@ export default function ProductCard({ product }) {
     openCart()
   }
 
+  const handleFavorite = async (event) => {
+    event.stopPropagation()
+    if (!user) { openLogin(); return }
+    if (isFavorite) {
+      await removeFavoriteItem(product.id)
+    } else {
+      await addFavoriteItem(product.id)
+    }
+  }
+
   return (
     <div className="group relative">
       <div className="absolute -inset-1 bg-primary opacity-0 transition-opacity duration-75 group-hover:opacity-100" />
       <article className="product-card relative z-10 h-full" onClick={() => navigate(`/product/${product.id}`)}>
-        <div className="aspect-[2/3] overflow-hidden gutter-line bg-surface-dim">
+        <div className="aspect-[2/3] overflow-hidden gutter-line bg-surface-dim relative">
           <img
             src={product.image}
             alt={product.title}
             className="h-80 w-full object-cover transition-transform duration-150 group-hover:scale-105"
           />
+          <button
+            type="button"
+            onClick={handleFavorite}
+            className="absolute top-2 right-2 p-1.5 bg-surface border-2 border-on-surface rounded-full transition-colors duration-150"
+            aria-label="Añadir a favoritos"
+          >
+            <Heart
+              size={16}
+              className={isFavorite ? 'fill-primary text-primary' : 'text-on-surface'}
+            />
+         </button>
         </div>
 
         <div className="flex-grow p-4">

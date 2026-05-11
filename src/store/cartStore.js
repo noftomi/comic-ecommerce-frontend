@@ -36,6 +36,9 @@ const useCartStore = create((set, get) => ({
   openLogin: () => set({ isLoginOpen: true }),
   closeLogin: () => set({ isLoginOpen: false }),
 
+  isFavoritesOpen: false,
+  openFavorites: () => set({ isFavoritesOpen: true }),
+  closeFavorites: () => set({ isFavoritesOpen: false }),
   total: () => get().items.reduce((sum, item) => sum + item.price * item.qty, 0),
   totalItems: () => get().items.reduce((sum, item) => sum + item.qty, 0)
 }))
