@@ -5,19 +5,7 @@ import useFavoritesStore from '../../store/favoritesStore'
 import { useAuth } from '../../context/AuthContext'
 
 function formatPrice(value) {
-  return `$${value.toFixed(2)}`
-}
-
-function badgeClasses(variant) {
-  if (variant === 'primary') {
-    return 'bg-primary text-on-primary'
-  }
-
-  if (variant === 'secondary') {
-    return 'bg-secondary-container text-on-surface'
-  }
-
-  return 'bg-on-surface text-background'
+  return `$${Number(value).toFixed(2)}`
 }
 
 export default function ProductCard({ product }) {
@@ -52,7 +40,7 @@ export default function ProductCard({ product }) {
       <article className="product-card relative z-10 h-full" onClick={() => navigate(`/product/${product.id}`)}>
         <div className="aspect-[2/3] overflow-hidden gutter-line bg-surface-dim relative">
           <img
-            src={product.image}
+            src={product.imageUrl}
             alt={product.title}
             className="h-80 w-full object-cover transition-transform duration-150 group-hover:scale-105"
           />
@@ -66,12 +54,14 @@ export default function ProductCard({ product }) {
               size={16}
               className={isFavorite ? 'fill-primary text-primary' : 'text-on-surface'}
             />
-         </button>
+          </button>
         </div>
 
         <div className="flex-grow p-4">
           <div className="mb-3 flex items-center justify-between gap-4">
-            <span className={`badge ${badgeClasses(product.badgeVariant)}`}>{product.badge}</span>
+            <span className="badge bg-primary text-on-primary">
+              {product.edition || product.publisher}
+            </span>
             <span className="font-headline text-xl font-black text-primary shrink-0">
               {formatPrice(product.price)}
             </span>
