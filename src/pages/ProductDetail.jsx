@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { products } from '../data/products'
+import { getById } from '../services/comicsService'
 import useCartStore from '../store/cartStore'
 import { useAuth } from '../context/AuthContext'
 import { addFavorite, removeFavorite, getFavorites } from '../services/favoritesService'
@@ -8,7 +8,7 @@ import { getReviews, createReview, deleteReview } from '../services/reviewsServi
 import { Heart, Share2, Trash2 } from 'lucide-react'
 
 function formatPrice(value) {
-  return `$${value.toFixed(2)}`
+  return `$${Number(value).toFixed(2)}`
 }
 
 function Star({ filled, onClick, onMouseEnter, onMouseLeave, size = 'h-6 w-6' }) {
@@ -34,6 +34,8 @@ function formatDate(dateString) {
 
 export default function ProductDetail() {
   const { id } = useParams()
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [qty, setQty] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -44,7 +46,6 @@ export default function ProductDetail() {
   const [submitting, setSubmitting] = useState(false)
   const [reviewError, setReviewError] = useState('')
 
-  const product = useMemo(() => products.find((item) => item.id === Number(id)), [id])
   const addToCart = useCartStore((state) => state.addToCart)
   const openCart = useCartStore((state) => state.openCart)
   const openLogin = useCartStore((state) => state.openLogin)
@@ -53,6 +54,14 @@ export default function ProductDetail() {
   const averageRating = reviews.length > 0
     ? Math.round(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length)
     : 0
+
+  useEffect(() => {
+    setLoading(true)
+    getById(id)
+      .then(setProduct)
+      .catch(() => setProduct(null))
+      .finally(() => setLoading(false))
+  }, [id])
 
   useEffect(() => {
     if (user && product) {
@@ -115,6 +124,16 @@ export default function ProductDetail() {
     setReviews((prev) => prev.filter((r) => r.id !== reviewId))
   }
 
+  if (loading) {
+    return (
+      <main className="container mx-auto px-4 py-12">
+        <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-3xl font-black uppercase">
+          Cargando...
+        </div>
+      </main>
+    )
+  }
+
   if (!product) {
     return (
       <main className="container mx-auto px-4 py-12">
@@ -131,7 +150,7 @@ export default function ProductDetail() {
       <div className="flex flex-col items-start gap-12 lg:flex-row">
         <div className="lg:w-1/2">
           <div className="comic-shadow inline-block border-2 border-on-surface bg-white p-4">
-            <img src={product.image} alt={product.title} className="h-auto max-w-full border-2 border-on-surface" />
+            <img src={product.imageUrl} alt={product.title} className="h-auto max-w-full border-2 border-on-surface" />
           </div>
         </div>
 
@@ -164,8 +183,12 @@ export default function ProductDetail() {
 
           <div className="flex flex-wrap gap-2">
             <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">{product.publisher}</span>
-            <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">Páginas: {product.pages}</span>
-            <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">{product.edition}</span>
+            {product.pages && (
+              <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">Páginas: {product.pages}</span>
+            )}
+            {product.edition && (
+              <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">{product.edition}</span>
+            )}
           </div>
 
           <hr className="border-t-2 border-on-surface" />
