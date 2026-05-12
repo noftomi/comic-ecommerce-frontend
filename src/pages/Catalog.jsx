@@ -13,12 +13,14 @@ const defaultPublishers = {
 export default function Catalog() {
   const [comics, setComics] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [selectedPublishers, setSelectedPublishers] = useState(defaultPublishers)
   const [sortOrder, setSortOrder] = useState('featured')
 
   useEffect(() => {
     getAll()
       .then(setComics)
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
 
@@ -54,6 +56,10 @@ export default function Catalog() {
         {loading ? (
           <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
             Cargando cómics...
+          </div>
+        ) : error ? (
+          <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
+            Error al cargar los cómics. Intentá de nuevo más tarde.
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
