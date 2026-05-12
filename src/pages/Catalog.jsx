@@ -1,34 +1,43 @@
-import { useMemo, useState } from 'react'
-import { products } from '../data/products'
+import { useEffect, useMemo, useState } from 'react'
+import { getAll } from '../services/comicsService'
 import FilterSidebar from '../components/ui/FilterSidebar'
 import ProductCard from '../components/ui/ProductCard'
 
 const defaultPublishers = {
-  Marvel: true,
-  DC: true,
-  Image: true,
+  Marvel: false,
+  DC: false,
+  Image: false,
+  'Dark Horse': false,
 }
 
 export default function Catalog() {
+  const [comics, setComics] = useState([])
+  const [loading, setLoading] = useState(true)
   const [selectedPublishers, setSelectedPublishers] = useState(defaultPublishers)
   const [sortOrder, setSortOrder] = useState('featured')
 
+  useEffect(() => {
+    getAll()
+      .then(setComics)
+      .finally(() => setLoading(false))
+  }, [])
+
   const filteredProducts = useMemo(() => {
     const hasAnySelected = Object.values(selectedPublishers).some(Boolean)
-    const byPublisher = products.filter(
+    const byPublisher = comics.filter(
       (p) => !hasAnySelected || selectedPublishers[p.publisher]
     )
     if (sortOrder === 'low') return [...byPublisher].sort((a, b) => a.price - b.price)
     if (sortOrder === 'high') return [...byPublisher].sort((a, b) => b.price - a.price)
-    return [...byPublisher].sort((a, b) => b.rating - a.rating || b.reviews - a.reviews)
-  }, [selectedPublishers, sortOrder])
+    return byPublisher
+  }, [comics, selectedPublishers, sortOrder])
 
   const handlePublisherToggle = (publisher) => {
     setSelectedPublishers((prev) => ({ ...prev, [publisher]: !prev[publisher] }))
   }
 
   const handleClearFilters = () => {
-    setSelectedPublishers({ Marvel: false, DC: false, Image: false })
+    setSelectedPublishers(defaultPublishers)
     setSortOrder('featured')
   }
 
@@ -42,7 +51,11 @@ export default function Catalog() {
         onClearFilters={handleClearFilters}
       />
       <div className="md:w-3/4">
-        {filteredProducts.length === 0 ? (
+        {loading ? (
+          <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
+            Cargando cómics...
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
             No hay cómics con esos filtros.
           </div>
