@@ -5,9 +5,9 @@ import useCartStore from '../../store/cartStore'
 import { useAuth } from '../../context/AuthContext'
 import { logout } from '../../services/authService'
 
-const links = [
+const baseLinks = [
   { to: '/', label: 'Inicio', end: true },
-  { to: '/catalog', label: 'Catálogo' },
+  { to: '/catalog', label: 'Catalogo' },
 ]
 
 export default function Header() {
@@ -19,6 +19,9 @@ export default function Header() {
   const totalItems = useCartStore((state) => state.totalItems())
   const { user, setUser } = useAuth()
   const openFavorites = useCartStore((state) => state.openFavorites)
+  const links = user?.role === 'ADMIN'
+    ? [...baseLinks, { to: '/admin', label: 'Admin' }]
+    : baseLinks
 
   useEffect(() => {
     setMobileMenuOpen(false)

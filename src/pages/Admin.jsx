@@ -1,3 +1,654 @@
+import { useEffect, useMemo, useState } from 'react'
+import {
+  BarChart3,
+  BookOpen,
+  Boxes,
+  DollarSign,
+  Edit3,
+  PackagePlus,
+  Search,
+  ShoppingBag,
+  SlidersHorizontal,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react'
+import {
+  createManagedComic,
+  deleteManagedComic,
+  getManagedComics,
+  updateManagedComic,
+} from '../services/managementComicsService'
+import { uploadComicImage } from '../services/uploadsService'
+
+const tabs = [
+  { id: 'overview', label: 'Resumen', icon: BarChart3 },
+  { id: 'comics', label: 'Comics', icon: BookOpen },
+  { id: 'sales', label: 'Ventas', icon: ShoppingBag },
+]
+
+const emptyForm = {
+  title: '',
+  author: '',
+  description: '',
+  price: '',
+  stock: '',
+  imageUrl: '',
+  category: '',
+  language: 'es',
+  publisher: '',
+  pages: '',
+  edition: '',
+  issueNumber: '',
+}
+
+const pendingSales = [
+  { id: '#1024', customer: 'Lucia Martinez', items: 3, total: 84.97, status: 'Pendiente' },
+  { id: '#1023', customer: 'Rafael Gomez', items: 1, total: 39.99, status: 'Pagada' },
+  { id: '#1022', customer: 'Nadia Perez', items: 2, total: 52.49, status: 'Preparacion' },
+]
+
+function formatPrice(value) {
+  return `$${Number(value || 0).toFixed(2)}`
+}
+
+function buildFormFromComic(comic) {
+  return {
+    title: comic.title ?? '',
+    author: comic.author ?? '',
+    description: comic.description ?? '',
+    price: comic.price ?? '',
+    stock: comic.stock ?? '',
+    imageUrl: comic.imageUrl ?? '',
+    category: comic.category ?? '',
+    language: comic.language ?? 'es',
+    publisher: comic.publisher ?? '',
+    pages: comic.pages ?? '',
+    edition: comic.edition ?? '',
+    issueNumber: comic.issueNumber ?? '',
+  }
+}
+
+function validateComicForm(form) {
+  const errors = {}
+  if (!form.title.trim()) errors.title = 'El titulo es obligatorio'
+  if (!form.author.trim()) errors.author = 'El autor es obligatorio'
+  if (!form.price || Number(form.price) <= 0) errors.price = 'El precio debe ser mayor a 0'
+  if (form.stock === '' || !Number.isInteger(Number(form.stock)) || Number(form.stock) < 0) {
+    errors.stock = 'El stock debe ser un entero mayor o igual a 0'
+  }
+  if (form.pages !== '' && (!Number.isInteger(Number(form.pages)) || Number(form.pages) < 0)) {
+    errors.pages = 'Las paginas deben ser un entero mayor o igual a 0'
+  }
+  return errors
+}
+
+function toPayload(form) {
+  return {
+    ...form,
+    title: form.title.trim(),
+    author: form.author.trim(),
+    description: form.description.trim() || null,
+    price: Number(form.price),
+    stock: Number(form.stock),
+    imageUrl: form.imageUrl.trim() || null,
+    category: form.category.trim() || null,
+    language: form.language.trim() || null,
+    publisher: form.publisher.trim() || null,
+    pages: form.pages === '' ? null : Number(form.pages),
+    edition: form.edition.trim() || null,
+    issueNumber: form.issueNumber.trim() || null,
+  }
+}
+
+function AdminStat({ icon: Icon, label, value, tone = 'bg-surface-container-lowest' }) {
+  return (
+    <div className={`border-2 border-on-surface ${tone} p-4 comic-shadow-sm`}>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <span className="font-label text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+          {label}
+        </span>
+        <Icon size={18} className="shrink-0 text-on-surface" />
+      </div>
+      <p className="font-headline text-4xl font-black uppercase leading-none">{value}</p>
+    </div>
+  )
+}
+
+function Field({ label, name, value, onChange, error, type = 'text', textarea = false, required = false }) {
+  return (
+    <label className="grid gap-1">
+      <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+        {label}{required ? ' *' : ''}
+      </span>
+      {textarea ? (
+        <textarea
+          name={name}
+          value={value}
+          onChange={onChange}
+          className={`input-comic min-h-24 px-3 py-2 normal-case ${error ? 'border-error' : ''}`}
+        />
+      ) : (
+        <input
+          name={name}
+          type={type}
+          value={value}
+          onChange={onChange}
+          className={`input-comic px-3 py-2 normal-case ${error ? 'border-error' : ''}`}
+        />
+      )}
+      {error && <span className="text-[10px] font-black uppercase text-error">{error}</span>}
+    </label>
+  )
+}
+
+function ComicFormModal({ comic, onClose, onSaved }) {
+  const [form, setForm] = useState(() => (comic ? buildFormFromComic(comic) : emptyForm))
+  const [errors, setErrors] = useState({})
+  const [serverError, setServerError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imageUploadError, setImageUploadError] = useState('')
+  const isEditing = Boolean(comic)
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setForm((current) => ({ ...current, [name]: value }))
+    setErrors((current) => ({ ...current, [name]: '' }))
+    setServerError('')
+  }
+
+  const handleImageFileChange = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setImageUploadError('Selecciona un archivo de imagen')
+      return
+    }
+
+    setUploadingImage(true)
+    setImageUploadError('')
+    setServerError('')
+    try {
+      const uploaded = await uploadComicImage(file)
+      setForm((current) => ({ ...current, imageUrl: uploaded.imageUrl }))
+    } catch (error) {
+      setImageUploadError(error.response?.data?.error || 'No se pudo subir la imagen')
+    } finally {
+      setUploadingImage(false)
+      event.target.value = ''
+    }
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    const nextErrors = validateComicForm(form)
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors)
+      return
+    }
+
+    setSaving(true)
+    setServerError('')
+    try {
+      const payload = toPayload(form)
+      const saved = isEditing
+        ? await updateManagedComic(comic.id, payload)
+        : await createManagedComic(payload)
+      onSaved(saved)
+    } catch (error) {
+      setServerError(error.response?.data?.error || 'No se pudo guardar el comic')
+      setErrors(error.response?.data?.errors || {})
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <button type="button" className="absolute inset-0 bg-on-surface/60" onClick={onClose} aria-label="Cerrar" />
+      <section className="relative max-h-[92vh] w-full max-w-4xl overflow-y-auto border-4 border-on-surface bg-surface-container-lowest p-5 comic-shadow md:p-7">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <span className="mb-2 inline-block border-2 border-on-surface bg-secondary-container px-2 py-1 text-[10px] font-black uppercase tracking-widest">
+              {isEditing ? 'Editar' : 'Alta'}
+            </span>
+            <h2 className="font-headline text-4xl font-black uppercase leading-none">
+              {isEditing ? 'Editar comic' : 'Nuevo comic'}
+            </h2>
+          </div>
+          <button type="button" onClick={onClose} className="border-2 border-on-surface bg-primary p-1 text-on-primary">
+            <X size={22} />
+          </button>
+        </div>
+
+        <form className="grid gap-5" onSubmit={handleSubmit} noValidate>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Titulo" name="title" value={form.title} onChange={handleChange} error={errors.title} required />
+            <Field label="Autor" name="author" value={form.author} onChange={handleChange} error={errors.author} required />
+          </div>
+
+          <Field
+            label="Descripcion"
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            error={errors.description}
+            textarea
+          />
+
+          <div className="grid gap-4 md:grid-cols-4">
+            <Field label="Precio" name="price" type="number" value={form.price} onChange={handleChange} error={errors.price} required />
+            <Field label="Stock" name="stock" type="number" value={form.stock} onChange={handleChange} error={errors.stock} required />
+            <Field label="Paginas" name="pages" type="number" value={form.pages} onChange={handleChange} error={errors.pages} />
+            <Field label="Idioma" name="language" value={form.language} onChange={handleChange} error={errors.language} />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Editorial" name="publisher" value={form.publisher} onChange={handleChange} error={errors.publisher} />
+            <Field label="Categoria" name="category" value={form.category} onChange={handleChange} error={errors.category} />
+            <Field label="Edicion" name="edition" value={form.edition} onChange={handleChange} error={errors.edition} />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+            <div className="grid gap-3">
+              <Field label="URL de imagen" name="imageUrl" value={form.imageUrl} onChange={handleChange} error={errors.imageUrl} />
+              <div className="flex flex-col gap-3 border-2 border-on-surface bg-surface-container p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                    Subir imagen desde tu equipo
+                  </p>
+                  {imageUploadError && (
+                    <p className="mt-1 text-[10px] font-black uppercase text-error">{imageUploadError}</p>
+                  )}
+                </div>
+                <label className="btn-secondary flex cursor-pointer items-center justify-center gap-2 px-4 py-2 text-xs">
+                  <Upload size={16} />
+                  {uploadingImage ? 'Subiendo...' : 'Elegir imagen'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingImage}
+                    onChange={handleImageFileChange}
+                    className="sr-only"
+                  />
+                </label>
+              </div>
+              {form.imageUrl && (
+                <div className="flex items-center gap-3 border-2 border-on-surface bg-white p-3">
+                  <img
+                    src={form.imageUrl}
+                    alt="Preview de portada"
+                    className="h-24 w-16 border-2 border-on-surface object-cover"
+                  />
+                  <p className="break-all text-xs font-bold text-on-surface-variant">
+                    {form.imageUrl}
+                  </p>
+                </div>
+              )}
+            </div>
+            <Field label="Numero" name="issueNumber" value={form.issueNumber} onChange={handleChange} error={errors.issueNumber} />
+          </div>
+
+          {serverError && (
+            <p className="border-2 border-error bg-surface-container px-3 py-2 text-xs font-black uppercase text-error">
+              {serverError}
+            </p>
+          )}
+
+          <div className="flex flex-col gap-3 border-t-2 border-on-surface pt-5 sm:flex-row sm:justify-end">
+            <button type="button" onClick={onClose} className="btn-secondary px-5 py-3 text-xs">
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving || uploadingImage} className="btn-primary px-5 py-3 text-xs disabled:opacity-60">
+              {saving ? 'Guardando...' : 'Guardar comic'}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  )
+}
+
 export default function Admin() {
-  return <h1 className="text-3xl font-bold p-8">Panel Admin</h1>
+  const [activeTab, setActiveTab] = useState('overview')
+  const [comics, setComics] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
+  const [modalComic, setModalComic] = useState(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [actionError, setActionError] = useState('')
+
+  const loadComics = async () => {
+    setLoading(true)
+    setActionError('')
+    try {
+      const data = await getManagedComics()
+      setComics(data)
+    } catch (error) {
+      setActionError(error.response?.data?.error || 'No se pudo cargar el catalogo')
+      setComics([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadComics()
+  }, [])
+
+  const filteredComics = useMemo(() => {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return comics
+    return comics.filter((comic) =>
+      [comic.title, comic.author, comic.publisher, comic.category]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(normalized))
+    )
+  }, [comics, query])
+
+  const totalStock = comics.reduce((sum, comic) => sum + Number(comic.stock || 0), 0)
+  const lowStock = comics.filter((comic) => Number(comic.stock || 0) <= 5).length
+  const inventoryValue = comics.reduce(
+    (sum, comic) => sum + Number(comic.price || 0) * Number(comic.stock || 0),
+    0
+  )
+
+  const openCreate = () => {
+    setModalComic(null)
+    setIsFormOpen(true)
+  }
+
+  const openEdit = (comic) => {
+    setModalComic(comic)
+    setIsFormOpen(true)
+  }
+
+  const handleSaved = (savedComic) => {
+    setComics((current) => {
+      const exists = current.some((comic) => comic.id === savedComic.id)
+      if (exists) return current.map((comic) => (comic.id === savedComic.id ? savedComic : comic))
+      return [savedComic, ...current]
+    })
+    setIsFormOpen(false)
+    setModalComic(null)
+    setActiveTab('comics')
+  }
+
+  const handleDelete = async (comic) => {
+    const confirmed = window.confirm(`Eliminar "${comic.title}" del catalogo?`)
+    if (!confirmed) return
+    setActionError('')
+    try {
+      await deleteManagedComic(comic.id)
+      setComics((current) => current.filter((item) => item.id !== comic.id))
+    } catch (error) {
+      setActionError(error.response?.data?.error || 'No se pudo eliminar el comic')
+    }
+  }
+
+  return (
+    <main className="flex-1 bg-surface-container-low px-4 py-8 md:px-8">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
+        <section className="border-4 border-on-surface bg-surface-container-lowest p-5 comic-shadow md:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <span className="mb-3 inline-block border-2 border-on-surface bg-secondary-container px-3 py-1 font-label text-[10px] font-black uppercase tracking-widest">
+                Administracion
+              </span>
+              <h1 className="font-headline text-5xl font-black uppercase leading-none md:text-7xl">
+                Panel Admin
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm font-bold uppercase leading-relaxed text-on-surface-variant">
+                Centro operativo para inventario, alta de comics y seguimiento de ventas.
+              </p>
+            </div>
+
+            <button type="button" onClick={openCreate} className="btn-primary flex items-center justify-center gap-2 px-5 py-3 text-sm">
+              <PackagePlus size={18} />
+              Nuevo comic
+            </button>
+          </div>
+        </section>
+
+        {actionError && (
+          <p className="border-2 border-error bg-surface-container-lowest px-4 py-3 text-xs font-black uppercase text-error comic-shadow-sm">
+            {actionError}
+          </p>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="h-fit border-2 border-on-surface bg-surface-container-lowest p-3 comic-shadow-sm">
+            <nav className="grid gap-2">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-3 border-2 border-on-surface px-3 py-3 text-left font-headline text-sm font-black uppercase transition-colors ${
+                      isActive
+                        ? 'bg-secondary-container text-on-surface'
+                        : 'bg-surface-container-lowest hover:bg-surface-container'
+                    }`}
+                  >
+                    <Icon size={18} />
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </nav>
+          </aside>
+
+          <section className="min-w-0">
+            {activeTab === 'overview' && (
+              <div className="grid gap-6">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <AdminStat icon={BookOpen} label="Comics cargados" value={comics.length} />
+                  <AdminStat icon={Boxes} label="Unidades en stock" value={totalStock} />
+                  <AdminStat icon={SlidersHorizontal} label="Stock bajo" value={lowStock} tone="bg-secondary-container" />
+                  <AdminStat icon={DollarSign} label="Valor inventario" value={formatPrice(inventoryValue)} />
+                </div>
+
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(340px,0.8fr)]">
+                  <div className="border-2 border-on-surface bg-surface-container-lowest p-5 comic-shadow-sm">
+                    <div className="mb-5 flex items-center justify-between gap-4">
+                      <h2 className="font-headline text-2xl font-black uppercase">Actividad del catalogo</h2>
+                      <BookOpen size={20} />
+                    </div>
+                    <div className="space-y-3">
+                      {comics.slice(0, 5).map((comic) => (
+                        <div key={comic.id} className="flex items-center justify-between gap-4 border-2 border-on-surface bg-surface-container p-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-headline text-sm font-black uppercase">{comic.title}</p>
+                            <p className="text-[10px] font-bold uppercase text-on-surface-variant">
+                              {comic.publisher || 'Sin editorial'} / {comic.category || 'Sin categoria'}
+                            </p>
+                          </div>
+                          <span className="shrink-0 border-2 border-on-surface bg-white px-2 py-1 text-xs font-black">
+                            Stock {comic.stock}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-2 border-on-surface bg-surface-container-lowest p-5 comic-shadow-sm">
+                    <div className="mb-5 flex items-center justify-between gap-4">
+                      <h2 className="font-headline text-2xl font-black uppercase">Ventas recientes</h2>
+                      <ShoppingBag size={20} />
+                    </div>
+                    <div className="space-y-3">
+                      {pendingSales.map((sale) => (
+                        <div key={sale.id} className="border-2 border-on-surface bg-surface-container p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="font-headline text-sm font-black uppercase">{sale.id}</p>
+                            <span className="bg-primary px-2 py-1 text-[10px] font-black uppercase text-on-primary">
+                              {sale.status}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-xs font-bold uppercase text-on-surface-variant">{sale.customer}</p>
+                          <p className="mt-1 font-headline text-xl font-black">{formatPrice(sale.total)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'comics' && (
+              <div className="border-2 border-on-surface bg-surface-container-lowest comic-shadow-sm">
+                <div className="flex flex-col gap-4 border-b-2 border-on-surface p-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h2 className="font-headline text-3xl font-black uppercase">Gestion de comics</h2>
+                    <p className="mt-1 text-xs font-bold uppercase text-on-surface-variant">
+                      Alta, edicion y control de inventario.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 border-2 border-on-surface bg-white px-3 py-2">
+                    <Search size={16} />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Buscar comic"
+                      className="w-full border-0 bg-transparent p-0 text-sm font-bold uppercase focus:ring-0 lg:w-72"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[980px] text-left">
+                    <thead className="bg-surface-container">
+                      <tr className="border-b-2 border-on-surface">
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Comic</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Editorial</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Categoria</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Precio</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Stock</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Estado</th>
+                        <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr>
+                          <td colSpan="7" className="px-4 py-8 text-center font-headline text-xl font-black uppercase">
+                            Cargando catalogo...
+                          </td>
+                        </tr>
+                      ) : filteredComics.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" className="px-4 py-8 text-center font-headline text-xl font-black uppercase">
+                            Sin resultados
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredComics.map((comic) => (
+                          <tr key={comic.id} className="border-b border-on-surface/20">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={comic.imageUrl || 'https://placehold.co/120x180/F4EEDA/1E1C10?text=COMIC'}
+                                  alt={comic.title}
+                                  className="h-14 w-10 border-2 border-on-surface object-cover"
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate font-headline text-sm font-black uppercase">{comic.title}</p>
+                                  <p className="truncate text-[10px] font-bold uppercase text-on-surface-variant">
+                                    {comic.author}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-bold uppercase">{comic.publisher || '-'}</td>
+                            <td className="px-4 py-3 text-xs font-bold uppercase">{comic.category || '-'}</td>
+                            <td className="px-4 py-3 font-headline text-lg font-black">{formatPrice(comic.price)}</td>
+                            <td className="px-4 py-3 text-sm font-black">{comic.stock}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-block border-2 border-on-surface px-2 py-1 text-[10px] font-black uppercase ${
+                                Number(comic.stock || 0) <= 5 ? 'bg-secondary-container' : 'bg-white'
+                              }`}>
+                                {Number(comic.stock || 0) <= 5 ? 'Stock bajo' : 'Activo'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => openEdit(comic)}
+                                  className="border-2 border-on-surface bg-secondary-container p-2"
+                                  aria-label="Editar comic"
+                                >
+                                  <Edit3 size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(comic)}
+                                  className="border-2 border-on-surface bg-primary p-2 text-on-primary"
+                                  aria-label="Eliminar comic"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'sales' && (
+              <div className="border-2 border-on-surface bg-surface-container-lowest p-5 comic-shadow-sm">
+                <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h2 className="font-headline text-3xl font-black uppercase">Gestion de ventas</h2>
+                    <p className="mt-1 text-xs font-bold uppercase text-on-surface-variant">
+                      Vista preparada para conectar ordenes, pagos y cambios de estado.
+                    </p>
+                  </div>
+                  <button type="button" className="btn-secondary px-4 py-2 text-xs">
+                    Exportar
+                  </button>
+                </div>
+
+                <div className="grid gap-4">
+                  {pendingSales.map((sale) => (
+                    <article key={sale.id} className="grid gap-4 border-2 border-on-surface bg-surface-container p-4 md:grid-cols-[120px_1fr_120px_140px] md:items-center">
+                      <p className="font-headline text-xl font-black uppercase">{sale.id}</p>
+                      <div>
+                        <p className="font-headline text-sm font-black uppercase">{sale.customer}</p>
+                        <p className="text-[10px] font-bold uppercase text-on-surface-variant">
+                          {sale.items} productos
+                        </p>
+                      </div>
+                      <p className="font-headline text-xl font-black">{formatPrice(sale.total)}</p>
+                      <span className="w-fit border-2 border-on-surface bg-white px-3 py-2 text-[10px] font-black uppercase">
+                        {sale.status}
+                      </span>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      {isFormOpen && (
+        <ComicFormModal
+          comic={modalComic}
+          onClose={() => setIsFormOpen(false)}
+          onSaved={handleSaved}
+        />
+      )}
+    </main>
+  )
 }
