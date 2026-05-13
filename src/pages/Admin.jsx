@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   BarChart3,
   BookOpen,
-  Boxes,
   DollarSign,
   Edit3,
   PackagePlus,
@@ -20,6 +19,11 @@ import {
   updateManagedComic,
 } from '../services/managementComicsService'
 import { uploadComicImage } from '../services/uploadsService'
+import {
+  getAdminOrderStats,
+  getAdminOrders,
+  updateAdminOrderStatus,
+} from '../services/adminOrdersService'
 
 const tabs = [
   { id: 'overview', label: 'Resumen', icon: BarChart3 },
@@ -42,14 +46,26 @@ const emptyForm = {
   issueNumber: '',
 }
 
-const pendingSales = [
-  { id: '#1024', customer: 'Lucia Martinez', items: 3, total: 84.97, status: 'Pendiente' },
-  { id: '#1023', customer: 'Rafael Gomez', items: 1, total: 39.99, status: 'Pagada' },
-  { id: '#1022', customer: 'Nadia Perez', items: 2, total: 52.49, status: 'Preparacion' },
+const orderStatusOptions = [
+  { value: 'PENDING', label: 'Pendiente' },
+  { value: 'PAID', label: 'Pagada' },
+  { value: 'SHIPPED', label: 'Enviada' },
+  { value: 'DELIVERED', label: 'Entregada' },
+  { value: 'CANCELLED', label: 'Cancelada' },
 ]
+
+const orderStatusLabels = Object.fromEntries(orderStatusOptions.map((status) => [status.value, status.label]))
 
 function formatPrice(value) {
   return `$${Number(value || 0).toFixed(2)}`
+}
+
+function formatDate(value) {
+  return new Date(value).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 function buildFormFromComic(comic) {
@@ -319,6 +335,10 @@ export default function Admin() {
   const [modalComic, setModalComic] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [actionError, setActionError] = useState('')
+  const [orders, setOrders] = useState([])
+  const [orderStats, setOrderStats] = useState({ totalSales: 0, ordersCount: 0, topComics: [] })
+  const [ordersLoading, setOrdersLoading] = useState(true)
+  const [updatingOrderId, setUpdatingOrderId] = useState(null)
 
   const loadComics = async () => {
     setLoading(true)
@@ -334,8 +354,28 @@ export default function Admin() {
     }
   }
 
+  const loadOrders = async () => {
+    setOrdersLoading(true)
+    setActionError('')
+    try {
+      const [ordersData, statsData] = await Promise.all([
+        getAdminOrders(),
+        getAdminOrderStats(),
+      ])
+      setOrders(ordersData)
+      setOrderStats(statsData)
+    } catch (error) {
+      setActionError(error.response?.data?.error || 'No se pudieron cargar las ordenes')
+      setOrders([])
+      setOrderStats({ totalSales: 0, ordersCount: 0, topComics: [] })
+    } finally {
+      setOrdersLoading(false)
+    }
+  }
+
   useEffect(() => {
     loadComics()
+    loadOrders()
   }, [])
 
   const filteredComics = useMemo(() => {
@@ -348,12 +388,7 @@ export default function Admin() {
     )
   }, [comics, query])
 
-  const totalStock = comics.reduce((sum, comic) => sum + Number(comic.stock || 0), 0)
   const lowStock = comics.filter((comic) => Number(comic.stock || 0) <= 5).length
-  const inventoryValue = comics.reduce(
-    (sum, comic) => sum + Number(comic.price || 0) * Number(comic.stock || 0),
-    0
-  )
 
   const openCreate = () => {
     setModalComic(null)
@@ -385,6 +420,21 @@ export default function Admin() {
       setComics((current) => current.filter((item) => item.id !== comic.id))
     } catch (error) {
       setActionError(error.response?.data?.error || 'No se pudo eliminar el comic')
+    }
+  }
+
+  const handleOrderStatusChange = async (order, status) => {
+    setUpdatingOrderId(order.id)
+    setActionError('')
+    try {
+      const updated = await updateAdminOrderStatus(order.id, status)
+      setOrders((current) => current.map((item) => (item.id === updated.id ? updated : item)))
+      const stats = await getAdminOrderStats()
+      setOrderStats(stats)
+    } catch (error) {
+      setActionError(error.response?.data?.error || 'No se pudo actualizar la orden')
+    } finally {
+      setUpdatingOrderId(null)
     }
   }
 
@@ -447,29 +497,33 @@ export default function Admin() {
             {activeTab === 'overview' && (
               <div className="grid gap-6">
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <AdminStat icon={DollarSign} label="Total ventas" value={formatPrice(orderStats.totalSales)} />
+                  <AdminStat icon={ShoppingBag} label="Ordenes" value={orderStats.ordersCount} />
                   <AdminStat icon={BookOpen} label="Comics cargados" value={comics.length} />
-                  <AdminStat icon={Boxes} label="Unidades en stock" value={totalStock} />
                   <AdminStat icon={SlidersHorizontal} label="Stock bajo" value={lowStock} tone="bg-secondary-container" />
-                  <AdminStat icon={DollarSign} label="Valor inventario" value={formatPrice(inventoryValue)} />
                 </div>
 
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(340px,0.8fr)]">
                   <div className="border-2 border-on-surface bg-surface-container-lowest p-5 comic-shadow-sm">
                     <div className="mb-5 flex items-center justify-between gap-4">
-                      <h2 className="font-headline text-2xl font-black uppercase">Actividad del catalogo</h2>
+                      <h2 className="font-headline text-2xl font-black uppercase">Comics mas vendidos</h2>
                       <BookOpen size={20} />
                     </div>
                     <div className="space-y-3">
-                      {comics.slice(0, 5).map((comic) => (
-                        <div key={comic.id} className="flex items-center justify-between gap-4 border-2 border-on-surface bg-surface-container p-3">
+                      {orderStats.topComics.length === 0 ? (
+                        <p className="border-2 border-on-surface bg-surface-container p-4 text-center font-headline text-xl font-black uppercase">
+                          Sin ventas registradas
+                        </p>
+                      ) : orderStats.topComics.map((comic) => (
+                        <div key={comic.comicId} className="flex items-center justify-between gap-4 border-2 border-on-surface bg-surface-container p-3">
                           <div className="min-w-0">
                             <p className="truncate font-headline text-sm font-black uppercase">{comic.title}</p>
                             <p className="text-[10px] font-bold uppercase text-on-surface-variant">
-                              {comic.publisher || 'Sin editorial'} / {comic.category || 'Sin categoria'}
+                              {comic.quantitySold} unidades / {formatPrice(comic.revenue)}
                             </p>
                           </div>
                           <span className="shrink-0 border-2 border-on-surface bg-white px-2 py-1 text-xs font-black">
-                            Stock {comic.stock}
+                            #{comic.comicId}
                           </span>
                         </div>
                       ))}
@@ -482,18 +536,23 @@ export default function Admin() {
                       <ShoppingBag size={20} />
                     </div>
                     <div className="space-y-3">
-                      {pendingSales.map((sale) => (
-                        <div key={sale.id} className="border-2 border-on-surface bg-surface-container p-3">
+                      {orders.slice(0, 5).map((order) => (
+                        <div key={order.id} className="border-2 border-on-surface bg-surface-container p-3">
                           <div className="flex items-center justify-between gap-3">
-                            <p className="font-headline text-sm font-black uppercase">{sale.id}</p>
+                            <p className="font-headline text-sm font-black uppercase">#{String(order.id).padStart(5, '0')}</p>
                             <span className="bg-primary px-2 py-1 text-[10px] font-black uppercase text-on-primary">
-                              {sale.status}
+                              {orderStatusLabels[order.status] || order.status}
                             </span>
                           </div>
-                          <p className="mt-2 text-xs font-bold uppercase text-on-surface-variant">{sale.customer}</p>
-                          <p className="mt-1 font-headline text-xl font-black">{formatPrice(sale.total)}</p>
+                          <p className="mt-2 text-xs font-bold uppercase text-on-surface-variant">{order.user?.name || order.user?.email || 'Usuario'}</p>
+                          <p className="mt-1 font-headline text-xl font-black">{formatPrice(order.total)}</p>
                         </div>
                       ))}
+                      {orders.length === 0 && (
+                        <p className="border-2 border-on-surface bg-surface-container p-4 text-center font-headline text-xl font-black uppercase">
+                          Sin ordenes
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -609,32 +668,75 @@ export default function Admin() {
               <div className="border-2 border-on-surface bg-surface-container-lowest p-5 comic-shadow-sm">
                 <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <h2 className="font-headline text-3xl font-black uppercase">Gestion de ventas</h2>
+                    <h2 className="font-headline text-3xl font-black uppercase">Gestion de ordenes</h2>
                     <p className="mt-1 text-xs font-bold uppercase text-on-surface-variant">
-                      Vista preparada para conectar ordenes, pagos y cambios de estado.
+                      Supervision de compras y actualizacion de estados.
                     </p>
                   </div>
-                  <button type="button" className="btn-secondary px-4 py-2 text-xs">
-                    Exportar
+                  <button type="button" onClick={loadOrders} className="btn-secondary px-4 py-2 text-xs">
+                    Actualizar
                   </button>
                 </div>
 
-                <div className="grid gap-4">
-                  {pendingSales.map((sale) => (
-                    <article key={sale.id} className="grid gap-4 border-2 border-on-surface bg-surface-container p-4 md:grid-cols-[120px_1fr_120px_140px] md:items-center">
-                      <p className="font-headline text-xl font-black uppercase">{sale.id}</p>
-                      <div>
-                        <p className="font-headline text-sm font-black uppercase">{sale.customer}</p>
-                        <p className="text-[10px] font-bold uppercase text-on-surface-variant">
-                          {sale.items} productos
-                        </p>
-                      </div>
-                      <p className="font-headline text-xl font-black">{formatPrice(sale.total)}</p>
-                      <span className="w-fit border-2 border-on-surface bg-white px-3 py-2 text-[10px] font-black uppercase">
-                        {sale.status}
-                      </span>
-                    </article>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1100px] text-left">
+                    <thead className="bg-surface-container">
+                      <tr className="border-b-2 border-on-surface">
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Orden</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Usuario</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Fecha</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Items</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Total</th>
+                        <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ordersLoading ? (
+                        <tr>
+                          <td colSpan="6" className="px-4 py-8 text-center font-headline text-xl font-black uppercase">
+                            Cargando ordenes...
+                          </td>
+                        </tr>
+                      ) : orders.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="px-4 py-8 text-center font-headline text-xl font-black uppercase">
+                            Sin ordenes registradas
+                          </td>
+                        </tr>
+                      ) : (
+                        orders.map((order) => (
+                          <tr key={order.id} className="border-b border-on-surface/20">
+                            <td className="px-4 py-3 font-headline text-lg font-black uppercase">
+                              #{String(order.id).padStart(5, '0')}
+                            </td>
+                            <td className="px-4 py-3">
+                              <p className="font-headline text-sm font-black uppercase">{order.user?.name || 'Usuario'}</p>
+                              <p className="text-[10px] font-bold uppercase text-on-surface-variant">{order.user?.email}</p>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-bold uppercase">{formatDate(order.createdAt)}</td>
+                            <td className="px-4 py-3 text-xs font-bold uppercase">
+                              {order.items.map((item) => `${item.quantity}x ${item.comic?.title || 'Comic'}`).join(', ')}
+                            </td>
+                            <td className="px-4 py-3 font-headline text-lg font-black">{formatPrice(order.total)}</td>
+                            <td className="px-4 py-3">
+                              <select
+                                value={order.status}
+                                disabled={updatingOrderId === order.id}
+                                onChange={(event) => handleOrderStatusChange(order, event.target.value)}
+                                className="border-2 border-on-surface bg-white px-3 py-2 text-xs font-black uppercase"
+                              >
+                                {orderStatusOptions.map((status) => (
+                                  <option key={status.value} value={status.value}>
+                                    {status.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
