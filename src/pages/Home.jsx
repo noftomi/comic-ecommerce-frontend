@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react'
-import { products } from '../data/products'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { getAll } from '../services/comicsService'
 import FilterSidebar from '../components/ui/FilterSidebar'
 import ProductCard from '../components/ui/ProductCard'
 
@@ -7,46 +7,46 @@ const heroCover =
   'https://lh3.googleusercontent.com/aida/ADBb0uic7xV0V4bW7jsbZMMBxb1q0voi_ej0404me6EymnHGqGI7asqFzL4f7UTv8e2vZpUM9RJx75anLcptYFASlljd-InY1rRD_yZBNgVvx1MPJ7Z6vWxV3Vt_9IuS8kQMuIq6HZ91U15WRDLFejDCGPmrAt01ukJ_c6vFOjT3bRSXf4tcvjo0MFuYd4l42kBoGW1Dg738kOftqAYl5SIO4u4uk0tjmB6K-SJ9gfuOU6dXR6JQYyfSnKqi1GlgPe9HyRtbqmxbDMTP'
 
 const defaultPublishers = {
-  Marvel: true,
-  DC: true,
-  Image: true
+  Marvel: false,
+  DC: false,
+  Image: false,
+  'Dark Horse': false,
 }
 
 export default function Home() {
   const gridRef = useRef(null)
+  const [comics, setComics] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [selectedPublishers, setSelectedPublishers] = useState(defaultPublishers)
   const [sortOrder, setSortOrder] = useState('featured')
 
+  useEffect(() => {
+    getAll()
+      .then(setComics)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }, [])
+
   const filteredProducts = useMemo(() => {
     const hasAnyPublisherSelected = Object.values(selectedPublishers).some(Boolean)
-    const byPublisher = products.filter(
+    const byPublisher = comics.filter(
       (product) => !hasAnyPublisherSelected || selectedPublishers[product.publisher]
     )
-
-    if (sortOrder === 'low') {
-      return [...byPublisher].sort((a, b) => a.price - b.price)
-    }
-
-    if (sortOrder === 'high') {
-      return [...byPublisher].sort((a, b) => b.price - a.price)
-    }
-
-    return [...byPublisher].sort((a, b) => b.rating - a.rating || b.reviews - a.reviews)
-  }, [selectedPublishers, sortOrder])
+    if (sortOrder === 'low') return [...byPublisher].sort((a, b) => a.price - b.price)
+    if (sortOrder === 'high') return [...byPublisher].sort((a, b) => b.price - a.price)
+    return byPublisher
+  }, [comics, selectedPublishers, sortOrder])
 
   const handlePublisherToggle = (publisher) => {
     setSelectedPublishers((current) => ({
       ...current,
-      [publisher]: !current[publisher]
+      [publisher]: !current[publisher],
     }))
   }
 
   const handleClearFilters = () => {
-    setSelectedPublishers({
-      Marvel: false,
-      DC: false,
-      Image: false
-    })
+    setSelectedPublishers(defaultPublishers)
     setSortOrder('featured')
   }
 
@@ -131,7 +131,15 @@ export default function Home() {
         />
 
         <div className="md:w-3/4">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
+              Cargando cómics...
+            </div>
+          ) : error ? (
+            <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
+              Error al cargar los cómics. Intentá de nuevo más tarde.
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
               No hay cómics con esos filtros.
             </div>

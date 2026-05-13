@@ -1,4 +1,4 @@
-const publishers = ['Marvel', 'DC', 'Image']
+const publishers = ['Marvel', 'DC', 'Image', 'Dark Horse']
 const sortOptions = [
   { id: 'low', label: 'Menor Precio' },
   { id: 'high', label: 'Mayor Precio' },
