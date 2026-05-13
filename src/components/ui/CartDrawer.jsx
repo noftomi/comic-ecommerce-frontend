@@ -1,4 +1,5 @@
 import { ShoppingCart, Trash2, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import useCartStore from '../../store/cartStore'
 import { useAuth } from '../../context/AuthContext'
 
@@ -15,6 +16,7 @@ export default function CartDrawer() {
   const total = useCartStore((state) => state.total())
   const { user } = useAuth()
   const openLogin = useCartStore((state) => state.openLogin)
+  const navigate = useNavigate()
 
   return (
     <>
@@ -125,7 +127,11 @@ export default function CartDrawer() {
           <span>Total:</span>
           <span>{formatPrice(total)}</span>
         </div>
-        <button type="button" className="btn-primary w-full py-4 text-xl">
+        <button
+          type="button"
+          className="btn-primary w-full py-4 text-xl"
+          onClick={() => { closeCart(); navigate('/checkout') }}
+        >
           PROCEDER AL PAGO
         </button>
         <button

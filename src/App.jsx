@@ -11,6 +11,13 @@ import Home from './pages/Home'
 import Catalog from './pages/Catalog'
 import ProductDetail from './pages/ProductDetail'
 import Register from './pages/Register'
+import VerifyEmailSent from './pages/VerifyEmailSent'
+import VerifyEmail from './pages/VerifyEmail'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import Checkout from './pages/Checkout'
+import Orders from './pages/Orders'
+import OrderWaiting from './pages/OrderWaiting'
 import Admin from './pages/Admin'
 import Profile from './pages/Profile'
 import ProfileFavorites from './pages/Profile/Favorites'
@@ -25,6 +32,8 @@ function AppShell() {
   const isLoginOpen = useCartStore((state) => state.isLoginOpen)
   const fetchFavorites = useFavoritesStore((state) => state.fetchFavorites)
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites)
+  const fetchCart = useCartStore((state) => state.fetchCart)
+  const clearCart = useCartStore((state) => state.clearCart)
 
   useEffect(() => {
     document.body.style.overflow = isCartOpen || isLoginOpen ? 'hidden' : ''
@@ -36,6 +45,11 @@ function AppShell() {
   useEffect(() => {
     if (user) fetchFavorites()
     else clearFavorites()
+  }, [user])
+
+  useEffect(() => {
+    if (user) fetchCart()
+    else clearCart()
   }, [user])
 
   return (
@@ -50,6 +64,10 @@ function AppShell() {
   <Route path="/catalog" element={<Catalog />} />
   <Route path="/product/:id" element={<ProductDetail />} />
   <Route path="/register" element={<Register />} />
+  <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
+  <Route path="/verify-email" element={<VerifyEmail />} />
+  <Route path="/forgot-password" element={<ForgotPassword />} />
+  <Route path="/reset-password" element={<ResetPassword />} />
 
   {/* Nivel A — cualquier usuario logueado */}
   <Route element={<ProtectedRoute allowedRoles={["CLIENT", "SELLER", "ADMIN"]} />}>
@@ -58,8 +76,9 @@ function AppShell() {
     </Route>
     <Route path="/cart" element={<div>Carrito</div>} />
     <Route path="/favorites" element={<div>Favoritos</div>} />
-    <Route path="/checkout" element={<div>Checkout</div>} />
-    <Route path="/orders" element={<div>Historial de compras</div>} />
+    <Route path="/checkout" element={<Checkout />} />
+    <Route path="/orders" element={<Orders />} />
+    <Route path="/orders/waiting" element={<OrderWaiting />} />
   </Route>
 
   {/* Nivel B — solo SELLER */}
