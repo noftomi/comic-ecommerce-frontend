@@ -19,9 +19,12 @@ export default function Header() {
   const totalItems = useCartStore((state) => state.totalItems())
   const { user, setUser } = useAuth()
   const openFavorites = useCartStore((state) => state.openFavorites)
-  const links = user?.role === 'ADMIN'
-    ? [...baseLinks, { to: '/admin', label: 'Admin' }]
-    : baseLinks
+  const links =
+    user?.role === 'ADMIN'
+      ? [...baseLinks, { to: '/admin', label: 'Admin' }]
+      : user?.role === 'SELLER'
+        ? [...baseLinks, { to: '/seller', label: 'Mi Panel' }]
+        : baseLinks
 
   useEffect(() => {
     setMobileMenuOpen(false)

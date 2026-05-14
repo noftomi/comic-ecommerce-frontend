@@ -19,6 +19,7 @@ import Checkout from './pages/Checkout'
 import Orders from './pages/Orders'
 import OrderWaiting from './pages/OrderWaiting'
 import Admin from './pages/Admin'
+import Seller from './pages/Seller'
 import Profile from './pages/Profile'
 import ProfileFavorites from './pages/Profile/Favorites'
 import useCartStore from './store/cartStore'
@@ -83,8 +84,7 @@ function AppShell() {
 
   {/* Nivel B — solo SELLER */}
   <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
-    <Route path="/publish" element={<div>Publicar artículo</div>} />
-    <Route path="/sales" element={<div>Historial de ventas</div>} />
+    <Route path="/seller" element={<Seller />} />
   </Route>
 
   {/* Nivel C — solo ADMIN */}
