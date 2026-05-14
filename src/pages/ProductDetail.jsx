@@ -78,9 +78,7 @@ export default function ProductDetail() {
   }, [product])
 
   const addWithQuantity = () => {
-    for (let index = 0; index < qty; index += 1) {
-      addToCart(product)
-    }
+    addToCart(product, qty)
     openCart()
   }
 
