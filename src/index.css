@@ -128,7 +128,7 @@
     @apply bg-secondary-container border-2 border-on-surface;
   }
   .input-comic {
-    @apply border-2 border-on-surface bg-surface-container-lowest font-body font-bold uppercase text-sm
+    @apply border-2 border-on-surface bg-surface-container-lowest font-body font-bold text-sm
            focus:border-primary focus:bg-surface-bright focus:ring-0
            transition-colors;
   }

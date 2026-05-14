@@ -6,6 +6,7 @@ import Footer from './components/layout/Footer'
 import CartDrawer from './components/ui/CartDrawer'
 import LoginModal from './components/ui/LoginModal'
 import FavoritesDrawer from './components/ui/FavoritesDrawer'
+import ChatWidget from './components/ui/ChatWidget'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Catalog from './pages/Catalog'
@@ -57,6 +58,7 @@ function AppShell() {
       <Header />
       <CartDrawer />
       <FavoritesDrawer />
+      {user && <ChatWidget />}
       <LoginModal />
       <div key={location.pathname} className="flex-1 flex flex-col animate-[fadeIn_0.15s_ease]">
         <Routes>

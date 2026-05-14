@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { addFavorite, removeFavorite, getFavorites } from '../services/favoritesService'
 import { getReviews, createReview, deleteReview } from '../services/reviewsService'
 import { Heart, Share2, Trash2 } from 'lucide-react'
+import RelatedComics from '../components/RelatedComics'
 
 function formatPrice(value) {
   return `$${Number(value).toFixed(2)}`
@@ -292,6 +293,8 @@ export default function ProductDetail() {
           </div>
         </div>
       </section>
+
+      <RelatedComics comicId={Number(id)} />
     </main>
   )
 }

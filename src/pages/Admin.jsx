@@ -24,6 +24,8 @@ import {
   getAdminOrders,
   updateAdminOrderStatus,
 } from '../services/adminOrdersService'
+import stanLeeImg from '../assets/stan-lee.png'
+import { generateDescription } from '../services/descriptionService'
 
 const tabs = [
   { id: 'overview', label: 'Resumen', icon: BarChart3 },
@@ -165,6 +167,8 @@ function ComicFormModal({ comic, onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imageUploadError, setImageUploadError] = useState('')
+  const [generatingDesc, setGeneratingDesc] = useState(false)
+  const [descError, setDescError] = useState('')
   const isEditing = Boolean(comic)
 
   const handleChange = (event) => {
@@ -221,6 +225,32 @@ function ComicFormModal({ comic, onClose, onSaved }) {
     }
   }
 
+  const handleGenerateDescription = async () => {
+    if (!form.title.trim()) {
+      setDescError('Ingresá el título primero para generar la descripción')
+      return
+    }
+    setGeneratingDesc(true)
+    setDescError('')
+    try {
+      const { description } = await generateDescription({
+        title: form.title,
+        author: form.author || undefined,
+        category: form.category || undefined,
+        publisher: form.publisher || undefined,
+        issueNumber: form.issueNumber || undefined,
+        edition: form.edition || undefined,
+        language: form.language || undefined,
+        pages: form.pages ? Number(form.pages) : undefined,
+      })
+      setForm((current) => ({ ...current, description }))
+    } catch (err) {
+      setDescError(err.response?.data?.error || 'Error al generar la descripción')
+    } finally {
+      setGeneratingDesc(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <button type="button" className="absolute inset-0 bg-on-surface/60" onClick={onClose} aria-label="Cerrar" />
@@ -245,14 +275,40 @@ function ComicFormModal({ comic, onClose, onSaved }) {
             <Field label="Autor" name="author" value={form.author} onChange={handleChange} error={errors.author} required />
           </div>
 
-          <Field
-            label="Descripcion"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            error={errors.description}
-            textarea
-          />
+          <label className="grid gap-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+              Descripcion
+            </span>
+            <div className="relative">
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                className={`input-comic min-h-24 w-full px-3 py-2 normal-case pr-12 ${errors.description ? 'border-error' : ''}`}
+              />
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={generatingDesc}
+                title="Generar con Stan Lee"
+                className="absolute bottom-2 right-2 h-9 w-9 overflow-hidden rounded-full border-2 border-on-surface bg-white transition-transform hover:scale-110 disabled:opacity-50"
+              >
+                {generatingDesc ? (
+                  <span className="flex h-full w-full items-center justify-center text-xs font-bold animate-spin">
+                    ↻
+                  </span>
+                ) : (
+                  <img src={stanLeeImg} alt="Generar con Stan Lee" className="h-full w-full object-cover" />
+                )}
+              </button>
+            </div>
+            {errors.description && (
+              <span className="text-[10px] font-black uppercase text-error">{errors.description}</span>
+            )}
+            {descError && (
+              <span className="text-[10px] font-black uppercase text-error">{descError}</span>
+            )}
+          </label>
 
           <div className="grid gap-4 md:grid-cols-4">
             <Field label="Precio" name="price" type="number" value={form.price} onChange={handleChange} error={errors.price} required />
