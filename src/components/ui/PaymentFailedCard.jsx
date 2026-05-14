@@ -70,7 +70,7 @@ export default function PaymentFailedCard({ statusDetail }) {
             REINTENTAR PAGO
           </Link>
           <Link
-            to="/checkout"
+            to="/cart"
             className="font-body font-black uppercase tracking-widest text-on-surface hover:text-primary underline decoration-4 underline-offset-8 transition-colors"
           >
             Volver al carrito
