@@ -169,7 +169,7 @@ function ChatPanel({ messages, input, loading, phase, endRef, onInput, onSend, o
   }
 
   return (
-    <div className="flex h-[520px] w-[340px] flex-col border-2 border-on-surface bg-white comic-shadow">
+    <div className="flex h-[520px] w-[340px] max-w-[calc(100vw-3rem)] flex-col border-2 border-on-surface bg-white comic-shadow">
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-on-surface bg-primary px-4 py-3">
         <div className="flex items-center gap-2">

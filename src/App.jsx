@@ -58,7 +58,7 @@ function AppShell() {
       <Header />
       <CartDrawer />
       <FavoritesDrawer />
-      <ChatWidget />
+      {user && <ChatWidget />}
       <LoginModal />
       <div key={location.pathname} className="flex-1 flex flex-col animate-[fadeIn_0.15s_ease]">
         <Routes>
