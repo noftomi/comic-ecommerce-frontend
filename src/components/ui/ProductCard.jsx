@@ -68,6 +68,10 @@ export default function ProductCard({ product }) {
           </div>
           <h3 className="font-headline text-2xl font-black leading-none uppercase">{product.title}</h3>
           <p className="font-body text-[10px] font-bold uppercase opacity-60">Editorial: {product.publisher}</p>
+          {product.seller
+            ? <p className="font-body text-[10px] font-bold uppercase opacity-60">Vendido por {product.seller.name}</p>
+            : <p className="font-body text-[10px] font-bold uppercase text-primary">Comics Corp</p>
+          }
         </div>
 
         <button

@@ -189,6 +189,14 @@ export default function ProductDetail() {
             )}
           </div>
 
+          <p className="font-body text-sm">
+            <span className="font-black uppercase">Vendedor: </span>
+            {product.seller
+              ? product.seller.name
+              : <span className="text-primary font-black">Comics Corp</span>
+            }
+          </p>
+
           <hr className="border-t-2 border-on-surface" />
 
           <div>
