@@ -318,11 +318,99 @@ function MessageItem({ msg, onModeSelect, onFormSubmit, onNavigate }) {
   return null
 }
 
-// Stub — reemplazado en Task 5
+const GENRES = ['Superhéroes', 'Manga', 'Terror', 'Sci-Fi', 'Fantasía', 'Western', 'Noir']
+const PUBLISHERS = ['Marvel', 'DC', 'Image', 'Dark Horse', 'Otra']
+const PRICES = ['Menos de $10', '$10 - $30', 'Más de $30', 'Sin límite']
+
 function StanLeeForm({ onSubmit }) {
+  const [genres, setGenres] = useState([])
+  const [publishers, setPublishers] = useState([])
+  const [price, setPrice] = useState('Sin límite')
+
+  function toggleGenre(g) {
+    setGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])
+  }
+
+  function togglePublisher(p) {
+    setPublishers((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p])
+  }
+
+  function handleSubmit() {
+    onSubmit({ categories: genres, publishers, priceFilter: price })
+  }
+
   return (
-    <div className="ml-9 border-2 border-on-surface bg-white p-3 w-[270px]">
-      <p className="font-body text-sm text-on-surface-variant">Cargando formulario...</p>
+    <div className="ml-9 border-2 border-on-surface bg-white p-3 flex flex-col gap-4 w-[270px]">
+      {/* Géneros */}
+      <div>
+        <p className="font-headline text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2">
+          ¿Qué géneros te atrapan?
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {GENRES.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => toggleGenre(g)}
+              className={`border-2 border-on-surface px-2 py-1 font-headline text-[10px] font-black uppercase transition-colors ${
+                genres.includes(g) ? 'bg-primary text-white' : 'bg-white hover:bg-surface-container'
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Editoriales */}
+      <div>
+        <p className="font-headline text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2">
+          ¿De qué editorial sos fanático?
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {PUBLISHERS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => togglePublisher(p)}
+              className={`border-2 border-on-surface px-2 py-1 font-headline text-[10px] font-black uppercase transition-colors ${
+                publishers.includes(p) ? 'bg-primary text-white' : 'bg-white hover:bg-surface-container'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Presupuesto */}
+      <div>
+        <p className="font-headline text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2">
+          ¿Cuánto querés invertir?
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {PRICES.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPrice(p)}
+              className={`border-2 border-on-surface px-2 py-1 font-headline text-[10px] font-black uppercase transition-colors ${
+                price === p ? 'bg-primary text-white' : 'bg-white hover:bg-surface-container'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSubmit}
+        className="btn-primary w-full py-2 text-xs"
+      >
+        ¡ENCUÉNTRAME CÓMICS!
+      </button>
     </div>
   )
 }
