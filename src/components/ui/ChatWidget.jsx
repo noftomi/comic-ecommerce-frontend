@@ -415,11 +415,41 @@ function StanLeeForm({ onSubmit }) {
   )
 }
 
-// Stub — reemplazado en Task 6
 function StanLeeResults({ comics, onNavigate }) {
+  if (comics.length === 0) return null
+
   return (
-    <div className="ml-9">
-      <p className="font-body text-sm">{comics.length} cómics encontrados.</p>
+    <div className="ml-9 w-[270px]">
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {comics.map((comic) => (
+          <button
+            key={comic.id}
+            type="button"
+            onClick={() => onNavigate(`/product/${comic.id}`)}
+            className="shrink-0 w-[90px] border-2 border-on-surface bg-white text-left comic-shadow-sm transition-transform hover:-translate-y-0.5"
+          >
+            <div className="h-[110px] overflow-hidden border-b-2 border-on-surface">
+              {comic.imageUrl ? (
+                <img
+                  src={comic.imageUrl}
+                  alt={comic.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-surface-dim" />
+              )}
+            </div>
+            <div className="p-1.5">
+              <p className="line-clamp-2 font-headline text-[9px] font-black uppercase leading-tight">
+                {comic.title}
+              </p>
+              <p className="mt-1 font-body text-[9px] font-bold text-on-surface-variant">
+                ${typeof comic.price === 'number' ? comic.price.toFixed(2) : comic.price}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
