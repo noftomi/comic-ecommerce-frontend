@@ -1,12 +1,28 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { MailOpen, Send, ArrowLeft } from 'lucide-react'
+import { resendVerification } from '../services/authService'
 
 export default function VerifyEmailSent() {
   const location = useLocation()
   const navigate = useNavigate()
   const email = location.state?.email
   const [spamHint, setSpamHint] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendError, setResendError] = useState(null)
+
+  const handleResend = async () => {
+    setResending(true)
+    setResendError(null)
+    try {
+      await resendVerification(email)
+      setSpamHint(true)
+    } catch {
+      setResendError('No se pudo reenviar el email. Intentá de nuevo.')
+    } finally {
+      setResending(false)
+    }
+  }
 
   return (
     <main className="flex-grow flex items-center justify-center p-6 relative overflow-hidden min-h-screen bg-surface">
@@ -72,12 +88,18 @@ export default function VerifyEmailSent() {
                 </p>
               </div>
             ) : (
-              <button
-                onClick={() => setSpamHint(true)}
-                className="w-full md:w-auto px-10 py-4 bg-surface border-4 border-on-surface font-headline font-black text-xl uppercase tracking-widest hover:bg-surface-container-high transition-colors comic-push-sm"
-              >
-                Reenviar email
-              </button>
+              <>
+                <button
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="w-full md:w-auto px-10 py-4 bg-surface border-4 border-on-surface font-headline font-black text-xl uppercase tracking-widest hover:bg-surface-container-high transition-colors comic-push-sm disabled:opacity-50"
+                >
+                  {resending ? 'Enviando...' : 'Reenviar email'}
+                </button>
+                {resendError && (
+                  <p className="font-body text-sm text-primary font-bold">{resendError}</p>
+                )}
+              </>
             )}
 
             <div className="space-y-2 text-center">
