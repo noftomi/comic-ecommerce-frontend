@@ -30,7 +30,7 @@ export default function RelatedComics({ comicId }) {
                 className="h-64 w-40 shrink-0 animate-pulse border-2 border-on-surface bg-surface-dim"
               />
             ))
-          : comics.map((comic) => (
+          : comics.slice(0, 10).map((comic) => (
               <button
                 key={comic.id}
                 type="button"
