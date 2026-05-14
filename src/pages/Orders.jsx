@@ -8,6 +8,26 @@ import PaymentSuccessCard from '../components/ui/PaymentSuccessCard'
 
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '', withCredentials: true })
 
+const statusLabels = {
+  PENDING: 'Pendiente',
+  PAID: 'Pagada',
+  SHIPPED: 'Enviada',
+  DELIVERED: 'Entregada',
+  CANCELLED: 'Cancelada',
+}
+
+function formatPrice(value) {
+  return `$${Number(value || 0).toFixed(2)}`
+}
+
+function formatDate(value) {
+  return new Date(value).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
 export default function Orders() {
   const [searchParams] = useSearchParams()
   const status = searchParams.get('status')
@@ -16,6 +36,9 @@ export default function Orders() {
   const [verifying, setVerifying] = useState(false)
   const [orderData, setOrderData] = useState(null)
   const [failureDetail, setFailureDetail] = useState(null)
+  const [orders, setOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [ordersError, setOrdersError] = useState('')
   const clearCart = useCartStore((s) => s.clearCart)
 
   useEffect(() => {
@@ -43,7 +66,99 @@ export default function Orders() {
     }
   }, [status, paymentId, preferenceId])
 
-  if (!status || !['success', 'failure', 'pending'].includes(status)) {
+  useEffect(() => {
+    if (status) return
+    setOrdersLoading(true)
+    setOrdersError('')
+    getOrders()
+      .then(setOrders)
+      .catch((error) => {
+        setOrders([])
+        setOrdersError(error.response?.data?.error || 'No se pudieron cargar tus ordenes')
+      })
+      .finally(() => setOrdersLoading(false))
+  }, [status])
+
+  if (!status) {
+    return (
+      <main className="min-h-screen bg-surface-container-low px-4 py-10 md:px-8">
+        <section className="mx-auto grid w-full max-w-5xl gap-6">
+          <div className="border-4 border-on-surface bg-surface-container-lowest p-6 comic-shadow md:p-8">
+            <span className="mb-3 inline-block border-2 border-on-surface bg-secondary-container px-3 py-1 font-label text-[10px] font-black uppercase tracking-widest">
+              Mi cuenta
+            </span>
+            <h1 className="font-headline text-5xl font-black uppercase leading-none md:text-7xl">
+              Mis ordenes
+            </h1>
+          </div>
+
+          {ordersError && (
+            <p className="border-2 border-error bg-surface-container-lowest px-4 py-3 text-xs font-black uppercase text-error comic-shadow-sm">
+              {ordersError}
+            </p>
+          )}
+
+          <div className="border-2 border-on-surface bg-surface-container-lowest comic-shadow-sm">
+            {ordersLoading ? (
+              <p className="px-4 py-12 text-center font-headline text-2xl font-black uppercase">
+                Cargando ordenes...
+              </p>
+            ) : orders.length === 0 ? (
+              <div className="px-6 py-16 text-center">
+                <p className="font-headline text-3xl font-black uppercase">Aun no tenes compras realizadas</p>
+                <Link to="/catalog" className="mt-6 inline-flex btn-primary px-5 py-3 text-xs">
+                  Ver catalogo
+                </Link>
+              </div>
+            ) : (
+              <div className="divide-y-2 divide-on-surface">
+                {orders.map((order) => (
+                  <article key={order.id} className="grid gap-4 p-5">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="font-headline text-2xl font-black uppercase">
+                          Orden #{String(order.id).padStart(5, '0')}
+                        </p>
+                        <p className="mt-1 text-xs font-bold uppercase text-on-surface-variant">
+                          {formatDate(order.createdAt)} / {order.items.length} item{order.items.length === 1 ? '' : 's'}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="border-2 border-on-surface bg-secondary-container px-3 py-2 text-[10px] font-black uppercase">
+                          {statusLabels[order.status] || order.status}
+                        </span>
+                        <p className="font-headline text-2xl font-black">{formatPrice(order.total)}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3">
+                      {order.items.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3 border-2 border-on-surface bg-surface-container p-3">
+                          <img
+                            src={item.comic?.imageUrl || 'https://placehold.co/120x180/F4EEDA/1E1C10?text=COMIC'}
+                            alt={item.comic?.title || 'Comic'}
+                            className="h-16 w-11 border-2 border-on-surface object-cover"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-headline text-sm font-black uppercase">{item.comic?.title || 'Comic eliminado'}</p>
+                            <p className="text-[10px] font-bold uppercase text-on-surface-variant">
+                              Cantidad {item.quantity} / {formatPrice(item.price)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    )
+  }
+
+  if (!['success', 'failure', 'pending'].includes(status)) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-surface">
         <p className="font-headline font-black text-xl uppercase text-primary">Estado desconocido.</p>
