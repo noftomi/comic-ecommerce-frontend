@@ -8,11 +8,13 @@ export default function RelatedComics({ comicId }) {
   const navigate = useNavigate()
 
   useEffect(() => {
+    let mounted = true
     setLoading(true)
     getRelated(comicId)
-      .then(setComics)
-      .catch(() => setComics([]))
-      .finally(() => setLoading(false))
+      .then((data) => { if (mounted) setComics(data.slice(0, 10)) })
+      .catch(() => { if (mounted) setComics([]) })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
   }, [comicId])
 
   if (!loading && comics.length === 0) return null
@@ -30,11 +32,12 @@ export default function RelatedComics({ comicId }) {
                 className="h-64 w-40 shrink-0 animate-pulse border-2 border-on-surface bg-surface-dim"
               />
             ))
-          : comics.slice(0, 10).map((comic) => (
+          : comics.map((comic) => (
               <button
                 key={comic.id}
                 type="button"
                 onClick={() => navigate(`/product/${comic.id}`)}
+                aria-label={comic.title}
                 className="comic-shadow-sm w-40 shrink-0 border-2 border-on-surface bg-white text-left transition-transform hover:-translate-y-1"
               >
                 <div className="h-48 overflow-hidden border-b-2 border-on-surface">
