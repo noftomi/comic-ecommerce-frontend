@@ -104,7 +104,8 @@ export default function ChatWidget() {
         addMsg({ type: 'stanlee', text: `¡Encontré ${filtered.length} cómics para vos, verdadero creyente!` })
         addMsg({ type: 'stanlee-results', comics: filtered.slice(0, 6) })
       }
-      setPhase('stanlee-results')
+      addMsg({ type: 'stanlee', text: '¡Hasta la próxima, verdadero creyente! El Profesor Xavier te acompaña desde aquí. 📞' })
+      setPhase('xavier')
     } catch {
       addMsg({ type: 'stanlee', text: 'Ups, no pude cargar las recomendaciones. Intentá de nuevo.' })
     } finally {
