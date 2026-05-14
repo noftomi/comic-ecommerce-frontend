@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { register } from "../services/authService";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
 
   const [form, setForm] = useState({
     nombre: "",
@@ -77,9 +75,8 @@ export default function Register() {
           ...(form.telefono.trim() && { telefono: form.telefono.trim() }),
         }),
       };
-      const userData = await register(payload);
-      setUser(userData);
-      navigate("/");
+      await register(payload);
+      navigate("/verify-email-sent", { state: { email: form.email } });
     } catch (err) {
       setServerError(err.response?.data?.error || err.message || "Ocurrió un error. Intentá de nuevo.");
     } finally {
@@ -88,9 +85,9 @@ export default function Register() {
   }
 
   const inputClass = (field) =>
-    `bg-white border-2 ${
-      errors[field] ? "border-[#C50000]" : "border-zinc-900"
-    } p-4 w-full focus:outline-none focus:bg-[#FFFBF0] font-bold font-body placeholder:text-zinc-400 transition-colors`;
+    `bg-surface-container-lowest border-2 ${
+      errors[field] ? "border-primary-container" : "border-on-surface"
+    } p-4 w-full focus:outline-none focus:bg-surface-bright font-bold font-body placeholder:text-on-surface-variant/50 transition-colors`;
 
   return (
     <main
@@ -98,41 +95,29 @@ export default function Register() {
       style={{
         background: "radial-gradient(#1e1c0e 1px, transparent 1px)",
         backgroundSize: "24px 24px",
-        backgroundColor: "#FFF9EA",
+        backgroundColor: "#FFF9E8",
       }}
     >
       <div
-        className="w-full max-w-2xl bg-[#FFF9EA] border-4 border-zinc-900 relative overflow-hidden"
+        className="w-full max-w-2xl bg-surface border-4 border-on-surface relative overflow-hidden"
         style={{ boxShadow: "8px 8px 0px 0px #1e1c0e" }}
       >
-        <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#C50000]" />
+        <div className="absolute left-0 top-0 bottom-0 w-2 bg-primary-container" />
 
         <div className="p-8 md:p-12">
           <header className="mb-10">
-            <h1
-              className="font-black text-5xl md:text-6xl uppercase tracking-tighter text-zinc-900 leading-none mb-4 italic"
-              style={{ fontFamily: "Epilogue, sans-serif" }}
-            >
+            <h1 className="font-headline font-black text-5xl md:text-6xl uppercase tracking-tighter text-on-surface leading-none mb-4 italic">
               Únete a la{" "}
-              <span className="text-[#C50000]">Revolución</span>
+              <span className="text-primary-container">Revolución</span>
             </h1>
-            <p
-              className="text-lg font-bold text-[#5d3f3a] uppercase tracking-wide"
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
+            <p className="font-body text-lg font-bold text-on-surface-variant uppercase tracking-wide">
               Crea tu cuenta para empezar a coleccionar.
             </p>
           </header>
 
           {serverError && (
-            <div className="mb-6 border-2 border-[#C50000] bg-[#ffdad4] px-4 py-3 flex items-center gap-3">
-              <span
-                className="material-symbols-outlined text-[#C50000]"
-                style={{ fontSize: "20px" }}
-              >
-                error
-              </span>
-              <p className="font-bold text-[#C50000] text-sm uppercase tracking-wide">
+            <div className="mb-6 border-2 border-primary-container bg-[#ffdad4] px-4 py-3 flex items-center gap-3">
+              <p className="font-body font-bold text-primary-container text-sm uppercase tracking-wide">
                 {serverError}
               </p>
             </div>
@@ -141,10 +126,7 @@ export default function Register() {
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label
-                  className="font-bold uppercase tracking-widest text-xs"
-                  style={{ fontFamily: "Manrope, sans-serif" }}
-                >
+                <label className="font-body font-bold uppercase tracking-widest text-xs">
                   Nombre
                 </label>
                 <input
@@ -157,17 +139,14 @@ export default function Register() {
                   autoComplete="given-name"
                 />
                 {errors.nombre && (
-                  <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                  <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                     {errors.nombre}
                   </p>
                 )}
               </div>
 
               <div className="flex flex-col gap-2">
-                <label
-                  className="font-bold uppercase tracking-widest text-xs"
-                  style={{ fontFamily: "Manrope, sans-serif" }}
-                >
+                <label className="font-body font-bold uppercase tracking-widest text-xs">
                   Apellido
                 </label>
                 <input
@@ -180,7 +159,7 @@ export default function Register() {
                   autoComplete="family-name"
                 />
                 {errors.apellido && (
-                  <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                  <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                     {errors.apellido}
                   </p>
                 )}
@@ -188,10 +167,7 @@ export default function Register() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label
-                className="font-bold uppercase tracking-widest text-xs"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              >
+              <label className="font-body font-bold uppercase tracking-widest text-xs">
                 Correo Electrónico
               </label>
               <input
@@ -204,7 +180,7 @@ export default function Register() {
                 autoComplete="email"
               />
               {errors.email && (
-                <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                   {errors.email}
                 </p>
               )}
@@ -212,10 +188,7 @@ export default function Register() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label
-                  className="font-bold uppercase tracking-widest text-xs"
-                  style={{ fontFamily: "Manrope, sans-serif" }}
-                >
+                <label className="font-body font-bold uppercase tracking-widest text-xs">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -230,8 +203,8 @@ export default function Register() {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((current) => !current)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 transition-colors"
+                    onClick={() => setShowPassword((c) => !c)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
                     aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
                   >
                     {showPassword ? (
@@ -249,17 +222,14 @@ export default function Register() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                  <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                     {errors.password}
                   </p>
                 )}
               </div>
 
               <div className="flex flex-col gap-2">
-                <label
-                  className="font-bold uppercase tracking-widest text-xs"
-                  style={{ fontFamily: "Manrope, sans-serif" }}
-                >
+                <label className="font-body font-bold uppercase tracking-widest text-xs">
                   Confirmar Contraseña
                 </label>
                 <div className="relative">
@@ -274,8 +244,8 @@ export default function Register() {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowConfirm((current) => !current)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 transition-colors"
+                    onClick={() => setShowConfirm((c) => !c)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
                     aria-label={showConfirm ? "Ocultar contraseña" : "Ver contraseña"}
                   >
                     {showConfirm ? (
@@ -293,7 +263,7 @@ export default function Register() {
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                  <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                     {errors.confirmPassword}
                   </p>
                 )}
@@ -302,13 +272,13 @@ export default function Register() {
 
             {/* Sección vendedor */}
             <div
-              className={`border-2 border-zinc-900 transition-colors duration-200 ${
-                form.esSeller ? "bg-[#FFFBF0]" : "bg-white"
+              className={`border-2 border-on-surface transition-colors duration-200 ${
+                form.esSeller ? "bg-surface-bright" : "bg-surface-container-lowest"
               }`}
             >
               <div className="flex items-center gap-3 p-4">
                 <input
-                  className="w-6 h-6 border-2 border-zinc-900 focus:ring-0 rounded-none bg-white appearance-none checked:bg-[#C50000] cursor-pointer shrink-0"
+                  className="w-6 h-6 border-2 border-on-surface focus:ring-0 rounded-none bg-surface-container-lowest appearance-none checked:bg-primary-container cursor-pointer shrink-0"
                   style={{
                     backgroundImage: form.esSeller
                       ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")"
@@ -322,33 +292,26 @@ export default function Register() {
                   onChange={handleChange}
                 />
                 <label
-                  className="font-bold uppercase tracking-wide text-sm cursor-pointer select-none"
+                  className="font-body font-bold uppercase tracking-wide text-sm cursor-pointer select-none"
                   htmlFor="esSeller"
-                  style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   Quiero registrarme como{" "}
-                  <span className="text-[#C50000]">vendedor</span>
+                  <span className="text-primary-container">vendedor</span>
                 </label>
               </div>
 
               {form.esSeller && (
-                <div className="border-t-2 border-zinc-900 px-4 pb-6 pt-6 space-y-6">
+                <div className="border-t-2 border-on-surface px-4 pb-6 pt-6 space-y-6">
                   <div className="flex items-center gap-2">
-                    <div className="w-1 h-5 bg-[#C50000]" />
-                    <p
-                      className="font-black uppercase tracking-widest text-xs text-[#C50000]"
-                      style={{ fontFamily: "Epilogue, sans-serif" }}
-                    >
+                    <div className="w-1 h-5 bg-primary-container" />
+                    <p className="font-headline font-black uppercase tracking-widest text-xs text-primary-container">
                       Datos de tu tienda
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-2">
-                      <label
-                        className="font-bold uppercase tracking-widest text-xs"
-                        style={{ fontFamily: "Manrope, sans-serif" }}
-                      >
+                      <label className="font-body font-bold uppercase tracking-widest text-xs">
                         CUIL
                       </label>
                       <input
@@ -361,19 +324,16 @@ export default function Register() {
                         autoComplete="off"
                       />
                       {errors.cuil && (
-                        <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                        <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                           {errors.cuil}
                         </p>
                       )}
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label
-                        className="font-bold uppercase tracking-widest text-xs"
-                        style={{ fontFamily: "Manrope, sans-serif" }}
-                      >
+                      <label className="font-body font-bold uppercase tracking-widest text-xs">
                         Teléfono de contacto{" "}
-                        <span className="normal-case font-normal text-zinc-500 tracking-normal">
+                        <span className="normal-case font-normal text-on-surface-variant tracking-normal">
                           (opcional)
                         </span>
                       </label>
@@ -389,13 +349,9 @@ export default function Register() {
                     </div>
                   </div>
 
-                  {/* País + Teléfono */}
                   <div className="grid grid-cols-1 gap-6">
                     <div className="flex flex-col gap-2">
-                      <label
-                        className="font-bold uppercase tracking-widest text-xs"
-                        style={{ fontFamily: "Manrope, sans-serif" }}
-                      >
+                      <label className="font-body font-bold uppercase tracking-widest text-xs">
                         País / Región
                       </label>
                       <select
@@ -416,7 +372,7 @@ export default function Register() {
                         <option value="OTHER">Otro</option>
                       </select>
                       {errors.pais && (
-                        <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                        <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                           {errors.pais}
                         </p>
                       )}
@@ -432,7 +388,7 @@ export default function Register() {
                             autoComplete="country-name"
                           />
                           {errors.paisCustom && (
-                            <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                            <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                               {errors.paisCustom}
                             </p>
                           )}
@@ -441,10 +397,9 @@ export default function Register() {
                     </div>
                   </div>
 
-                  {/* Términos vendedor */}
-                  <div className="flex items-start gap-3 border-2 border-zinc-900 bg-white p-4">
+                  <div className="flex items-start gap-3 border-2 border-on-surface bg-surface-container-lowest p-4">
                     <input
-                      className="w-5 h-5 border-2 border-zinc-900 focus:ring-0 rounded-none bg-white appearance-none checked:bg-[#C50000] cursor-pointer shrink-0 mt-0.5"
+                      className="w-5 h-5 border-2 border-on-surface focus:ring-0 rounded-none bg-surface-container-lowest appearance-none checked:bg-primary-container cursor-pointer shrink-0 mt-0.5"
                       style={{
                         backgroundImage: form.aceptaTerminos
                           ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")"
@@ -459,18 +414,17 @@ export default function Register() {
                     />
                     <label
                       htmlFor="aceptaTerminos"
-                      className="text-xs font-bold text-zinc-700 leading-relaxed cursor-pointer"
-                      style={{ fontFamily: "Manrope, sans-serif" }}
+                      className="font-body text-xs font-bold text-on-surface-variant leading-relaxed cursor-pointer"
                     >
                       Acepto los{" "}
-                      <span className="text-[#C50000] underline">
+                      <span className="text-primary-container underline">
                         términos y condiciones para vendedores
                       </span>
                       , incluyendo la comisión del 8% por venta y la política de envíos de Comics Corp.
                     </label>
                   </div>
                   {errors.aceptaTerminos && (
-                    <p className="text-[#C50000] text-xs font-bold uppercase tracking-wide">
+                    <p className="font-body text-primary-container text-xs font-bold uppercase tracking-wide">
                       {errors.aceptaTerminos}
                     </p>
                   )}
@@ -482,62 +436,29 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#C50000] text-white border-4 border-zinc-900 py-5 font-black text-2xl uppercase tracking-tighter flex items-center justify-center gap-3 group transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{
-                  fontFamily: "Epilogue, sans-serif",
-                  boxShadow: loading ? "none" : "4px 4px 0px 0px #1e1c0e",
-                }}
-                onMouseDown={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.transform = "translate(4px, 4px)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = "";
-                  e.currentTarget.style.boxShadow = loading ? "none" : "4px 4px 0px 0px #1e1c0e";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "";
-                  e.currentTarget.style.boxShadow = loading ? "none" : "4px 4px 0px 0px #1e1c0e";
-                }}
+                className="w-full bg-primary-container text-on-primary border-4 border-on-surface py-5 font-headline font-black text-2xl uppercase tracking-tighter flex items-center justify-center gap-3 comic-push-sm disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <>
-                    <span>Creando cuenta...</span>
-                    <span
-                      className="material-symbols-outlined animate-spin"
-                      style={{ fontSize: "24px" }}
-                    >
-                      progress_activity
-                    </span>
-                  </>
+                  <span>Creando cuenta...</span>
                 ) : (
                   <>
                     <span>Crear cuenta</span>
-                    <span
-                      className="material-symbols-outlined group-hover:translate-x-2 transition-transform"
-                      style={{ fontSize: "24px" }}
-                    >
-                      arrow_forward
-                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                    </svg>
                   </>
                 )}
               </button>
             </div>
           </form>
 
-          <footer className="mt-12 pt-8 border-t-2 border-[#e9e2cc] flex flex-row items-center justify-center gap-2">
-            <p
-              className="text-sm font-bold text-[#5d3f3a] uppercase tracking-widest"
-              style={{ fontFamily: "Manrope, sans-serif" }}
-            >
+          <footer className="mt-12 pt-8 border-t-2 border-outline-variant flex flex-row items-center justify-center gap-2">
+            <p className="font-body text-sm font-bold text-on-surface-variant uppercase tracking-widest">
               ¿Ya eres miembro?
             </p>
             <Link
               to="/login"
-              className="font-black text-[#C50000] uppercase underline decoration-2 underline-offset-4 hover:text-zinc-900 transition-colors"
-              style={{ fontFamily: "Epilogue, sans-serif" }}
+              className="font-headline font-black text-primary-container uppercase underline decoration-2 underline-offset-4 hover:text-on-surface transition-colors"
             >
               Inicia Sesión
             </Link>

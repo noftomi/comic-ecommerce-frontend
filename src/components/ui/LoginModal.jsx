@@ -80,9 +80,18 @@ export default function LoginModal() {
           </div>
 
           <div>
-            <label htmlFor="login-password" className="mb-2 block font-label text-xs font-bold uppercase">
-              Contraseña
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label htmlFor="login-password" className="font-label text-xs font-bold uppercase">
+                Contraseña
+              </label>
+              <button
+                type="button"
+                onClick={() => { closeLogin(); navigate('/forgot-password') }}
+                className="font-label text-xs font-bold uppercase underline transition-colors duration-75 hover:text-primary"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
             <input
               id="login-password"
               type="password"

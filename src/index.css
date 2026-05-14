@@ -64,6 +64,11 @@
   to { transform: translateX(0); }
 }
 
+@keyframes comic-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @layer base {
   body {
     @apply bg-background text-on-surface font-body overflow-x-hidden;
@@ -126,6 +131,25 @@
     @apply border-2 border-on-surface bg-surface-container-lowest font-body font-bold uppercase text-sm
            focus:border-primary focus:bg-surface-bright focus:ring-0
            transition-colors;
+  }
+  .animate-comic-spin {
+    animation: comic-spin 1.5s steps(8) infinite;
+  }
+  .comic-push {
+    box-shadow: 6px 6px 0px 0px #1E1C10;
+    transition: all 75ms;
+  }
+  .comic-push:not(:disabled):active {
+    transform: translate(6px, 6px);
+    box-shadow: none;
+  }
+  .comic-push-sm {
+    box-shadow: 4px 4px 0px 0px #1E1C10;
+    transition: all 75ms;
+  }
+  .comic-push-sm:not(:disabled):active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
   }
   .product-card {
     @apply relative bg-surface-container-lowest border-2 border-on-surface
