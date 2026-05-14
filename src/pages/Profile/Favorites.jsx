@@ -15,7 +15,7 @@ export default function ProfileFavorites() {
   }
 
   const handleAddToCart = (item) => {
-    addToCart({ id: item.id, title: item.title, price: Number(item.price), image: item.imageUrl })
+    addToCart({ id: item.id, title: item.title, price: Number(item.price), imageUrl: item.imageUrl })
     openCart()
   }
 

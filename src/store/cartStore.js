@@ -15,22 +15,27 @@ const useCartStore = create((set, get) => ({
     }
   },
 
-  clearCart: () => set({ items: [] }),
+  clearCart: async () => {
+    set({ items: [] })
+    try {
+      await cartService.clearCartApi()
+    } catch {}
+  },
 
-  addToCart: async (product) => {
+  addToCart: async (product, quantity = 1) => {
     set((state) => {
       const existing = state.items.find((item) => item.id === product.id)
       if (existing) {
         return {
           items: state.items.map((item) =>
-            item.id === product.id ? { ...item, qty: item.qty + 1 } : item
+            item.id === product.id ? { ...item, qty: item.qty + quantity } : item
           ),
         }
       }
-      return { items: [...state.items, { ...product, qty: 1 }] }
+      return { items: [...state.items, { ...product, qty: quantity }] }
     })
     try {
-      await cartService.addToCart(product.id)
+      await cartService.addToCart(product.id, quantity)
     } catch {}
   },
 

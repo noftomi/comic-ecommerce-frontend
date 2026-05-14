@@ -23,8 +23,10 @@ export default function OrderWaiting() {
   const [rejectionDetail, setRejectionDetail] = useState(null)
   const timeoutRef = useRef(null)
   const timerRef = useRef(null)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
+    mountedRef.current = true
     const raw = localStorage.getItem('mp_pending')
     if (!raw) { navigate('/'); return }
 
@@ -37,20 +39,23 @@ export default function OrderWaiting() {
     let attempts = 0
 
     async function poll() {
+      if (!mountedRef.current) return
       try {
         attempts++
         if (attempts > MAX_ATTEMPTS) {
           clearInterval(timerRef.current)
-          setStatus('timeout')
+          if (mountedRef.current) setStatus('timeout')
           return
         }
 
         const { data } = await api.get(`/api/orders/verify?order_id=${oid}`)
+        if (!mountedRef.current) return
 
         if (data.verified) {
           localStorage.removeItem('mp_pending')
           clearInterval(timerRef.current)
           await clearCart()
+          if (!mountedRef.current) return
           try {
             const orders = await getOrders()
             const found = orders.find((o) => o.id === (data.orderId ?? oid))
@@ -65,6 +70,7 @@ export default function OrderWaiting() {
           timeoutRef.current = setTimeout(poll, POLL_INTERVAL)
         }
       } catch (err) {
+        if (!mountedRef.current) return
         if (err.response?.status === 401) { navigate('/'); return }
         timeoutRef.current = setTimeout(poll, POLL_INTERVAL)
       }
@@ -73,6 +79,7 @@ export default function OrderWaiting() {
     poll()
 
     return () => {
+      mountedRef.current = false
       clearTimeout(timeoutRef.current)
       clearInterval(timerRef.current)
     }
