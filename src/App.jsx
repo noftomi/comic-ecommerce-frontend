@@ -28,6 +28,14 @@ import useFavoritesStore from './store/favoritesStore'
 import { useAuth } from './context/AuthContext'
 import { pageTransition } from './utils/motionVariants'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
 function AppShell() {
   const location = useLocation()
   const { user } = useAuth()
@@ -57,6 +65,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollToTop />
       <Header />
       <CartDrawer />
       <FavoritesDrawer />
