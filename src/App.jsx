@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
@@ -25,6 +26,7 @@ import ProfileFavorites from './pages/Profile/Favorites'
 import useCartStore from './store/cartStore'
 import useFavoritesStore from './store/favoritesStore'
 import { useAuth } from './context/AuthContext'
+import { pageTransition } from './utils/motionVariants'
 
 function AppShell() {
   const location = useLocation()
@@ -60,44 +62,55 @@ function AppShell() {
       <FavoritesDrawer />
       {user && <ChatWidget />}
       <LoginModal />
-      <div key={location.pathname} className="flex-1 flex flex-col animate-[fadeIn_0.15s_ease]">
-        <Routes>
-  <Route path="/" element={<Home />} />
-  <Route path="/catalog" element={<Catalog />} />
-  <Route path="/product/:id" element={<ProductDetail />} />
-  <Route path="/register" element={<Register />} />
-  <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
-  <Route path="/verify-email" element={<VerifyEmail />} />
-  <Route path="/forgot-password" element={<ForgotPassword />} />
-  <Route path="/reset-password" element={<ResetPassword />} />
 
-  {/* Nivel A — cualquier usuario logueado */}
-  <Route element={<ProtectedRoute allowedRoles={["CLIENT", "SELLER", "ADMIN"]} />}>
-   <Route path="/perfil" element={<Profile />}>
-    <Route path="favoritos" element={<ProfileFavorites />} />
-    </Route>
-    <Route path="/cart" element={<div>Carrito</div>} />
-    <Route path="/favorites" element={<div>Favoritos</div>} />
-    <Route path="/checkout" element={<Checkout />} />
-    <Route path="/orders" element={<Orders />} />
-    <Route path="/orders/waiting" element={<OrderWaiting />} />
-  </Route>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          variants={pageTransition}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="flex-1 flex flex-col"
+        >
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-  {/* Nivel B — solo SELLER */}
-  <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
-    <Route path="/publish" element={<div>Publicar artículo</div>} />
-    <Route path="/sales" element={<div>Historial de ventas</div>} />
-  </Route>
+            {/* Nivel A — cualquier usuario logueado */}
+            <Route element={<ProtectedRoute allowedRoles={["CLIENT", "SELLER", "ADMIN"]} />}>
+              <Route path="/perfil" element={<Profile />}>
+                <Route path="favoritos" element={<ProfileFavorites />} />
+              </Route>
+              <Route path="/cart" element={<div>Carrito</div>} />
+              <Route path="/favorites" element={<div>Favoritos</div>} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/waiting" element={<OrderWaiting />} />
+            </Route>
 
-  {/* Nivel C — solo ADMIN */}
-  <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-    <Route path="/admin" element={<Admin />} />
-    <Route path="/admin/users" element={<div>Gestión de usuarios</div>} />
-  </Route>
+            {/* Nivel B — solo SELLER */}
+            <Route element={<ProtectedRoute allowedRoles={["SELLER"]} />}>
+              <Route path="/publish" element={<div>Publicar artículo</div>} />
+              <Route path="/sales" element={<div>Historial de ventas</div>} />
+            </Route>
 
-  <Route path="*" element={<Navigate to="/" />} />
-</Routes>
-      </div>
+            {/* Nivel C — solo ADMIN */}
+            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/users" element={<div>Gestión de usuarios</div>} />
+            </Route>
+
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </motion.div>
+      </AnimatePresence>
+
       <Footer />
     </div>
   )

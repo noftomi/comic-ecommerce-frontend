@@ -70,6 +70,9 @@
 }
 
 @layer base {
+  html {
+    zoom: 1.1;
+  }
   body {
     @apply bg-background text-on-surface font-body overflow-x-hidden;
   }
@@ -78,6 +81,28 @@
   }
 }
 
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * EMPAREJAMIENTOS DE COLOR OBLIGATORIOS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  Fondo                           │ Texto requerido
+ *  ────────────────────────────────┼──────────────────────────────────────
+ *  bg-primary        (rojo)        │ text-on-primary        (#FFFFFF blanco)
+ *  bg-primary-container (rojo osc) │ text-on-primary        (#FFFFFF blanco)
+ *  bg-secondary-container (amarillo│ text-on-surface        (#1E1C10 oscuro)
+ *  bg-on-surface     (negro)       │ text-background        (#FFF9E8 crema)
+ *  bg-background / bg-surface-*   │ text-on-surface        (#1E1C10 oscuro)
+ *  bg-error          (rojo error)  │ text-on-error          (#FFFFFF blanco)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TIPOGRAFÍAS
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  font-headline  → Space Grotesk  │ Títulos, botones, badges, precios
+ *  font-body      → Work Sans      │ Párrafos, descripciones, texto general
+ *  font-label     → Work Sans      │ Etiquetas, textos pequeños de UI
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Ver src/theme/index.js para constantes JS y guía completa del design system
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
 @layer components {
   .comic-shadow {
     box-shadow: 8px 8px 0px 0px #1E1C10;
@@ -88,13 +113,16 @@
   .comic-shadow-red {
     box-shadow: 4px 4px 0px 0px #930000;
   }
+  .comic-shadow-inset {
+    box-shadow: inset 4px 4px 0px 0px #1E1C10;
+  }
   .gutter-line {
     border-bottom: 2px solid #1E1C10;
   }
   .btn-primary {
     @apply bg-primary text-on-primary font-headline font-black uppercase tracking-widest
            border-2 border-on-surface
-           transition-all duration-75 cursor-pointer;
+           transition-all duration-150 cursor-pointer;
     box-shadow: 4px 4px 0px 0px #1E1C10;
   }
   .btn-primary:hover {
@@ -107,7 +135,7 @@
   .btn-secondary {
     @apply bg-secondary-container text-on-surface font-headline font-black uppercase tracking-widest
            border-2 border-on-surface
-           transition-all duration-75 cursor-pointer;
+           transition-all duration-150 cursor-pointer;
     box-shadow: 4px 4px 0px 0px #1E1C10;
   }
   .btn-secondary:hover {
@@ -119,13 +147,13 @@
   }
   .nav-link {
     @apply font-headline uppercase tracking-tighter font-bold text-on-surface
-           px-2 py-1 transition-colors duration-75 cursor-pointer;
+           px-2 py-1 border-2 border-on-surface transition-colors duration-150 cursor-pointer;
   }
   .nav-link:hover {
-    @apply bg-secondary-container text-on-surface;
+    @apply bg-secondary-container;
   }
   .nav-link.active {
-    @apply bg-secondary-container border-2 border-on-surface;
+    @apply bg-secondary-container;
   }
   .input-comic {
     @apply border-2 border-on-surface bg-surface-container-lowest font-body font-bold text-sm
@@ -153,7 +181,7 @@
   }
   .product-card {
     @apply relative bg-surface-container-lowest border-2 border-on-surface
-           hover:-translate-x-1 hover:-translate-y-1 transition-transform duration-75
+           hover:-translate-x-1 hover:-translate-y-1 transition-transform duration-200
            flex flex-col overflow-hidden cursor-pointer;
     box-shadow: 4px 4px 0px 0px #1E1C10;
   }

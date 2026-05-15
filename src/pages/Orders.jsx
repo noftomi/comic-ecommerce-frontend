@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import axios from 'axios'
 import useCartStore from '../store/cartStore'
 import { getOrders } from '../services/ordersService'
@@ -83,14 +84,19 @@ export default function Orders() {
     return (
       <main className="min-h-screen bg-surface-container-low px-4 py-10 md:px-8">
         <section className="mx-auto grid w-full max-w-5xl gap-6">
-          <div className="border-4 border-on-surface bg-surface-container-lowest p-6 comic-shadow md:p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="border-4 border-on-surface bg-surface-container-lowest p-6 comic-shadow md:p-8"
+          >
             <span className="mb-3 inline-block border-2 border-on-surface bg-secondary-container px-3 py-1 font-label text-[10px] font-black uppercase tracking-widest">
               Mi cuenta
             </span>
             <h1 className="font-headline text-5xl font-black uppercase leading-none md:text-7xl">
               Mis ordenes
             </h1>
-          </div>
+          </motion.div>
 
           {ordersError && (
             <p className="border-2 border-error bg-surface-container-lowest px-4 py-3 text-xs font-black uppercase text-error comic-shadow-sm">
@@ -112,8 +118,14 @@ export default function Orders() {
               </div>
             ) : (
               <div className="divide-y-2 divide-on-surface">
-                {orders.map((order) => (
-                  <article key={order.id} className="grid gap-4 p-5">
+                {orders.map((order, i) => (
+                  <motion.article
+                    key={order.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut', delay: 0.1 + i * 0.07 }}
+                    className="grid gap-4 p-5"
+                  >
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div>
                         <p className="font-headline text-2xl font-black uppercase">
@@ -148,7 +160,7 @@ export default function Orders() {
                         </div>
                       ))}
                     </div>
-                  </article>
+                  </motion.article>
                 ))}
               </div>
             )}

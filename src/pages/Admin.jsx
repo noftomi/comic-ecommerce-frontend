@@ -286,21 +286,32 @@ function ComicFormModal({ comic, onClose, onSaved }) {
                 onChange={handleChange}
                 className={`input-comic min-h-24 w-full px-3 py-2 normal-case pr-12 ${errors.description ? 'border-error' : ''}`}
               />
-              <button
-                type="button"
-                onClick={handleGenerateDescription}
-                disabled={generatingDesc}
-                title="Generar con Stan Lee"
-                className="absolute bottom-2 right-2 h-9 w-9 overflow-hidden rounded-full border-2 border-on-surface bg-white transition-transform hover:scale-110 disabled:opacity-50"
-              >
-                {generatingDesc ? (
-                  <span className="flex h-full w-full items-center justify-center text-xs font-bold animate-spin">
-                    ↻
-                  </span>
-                ) : (
-                  <img src={stanLeeImg} alt="Generar con Stan Lee" className="h-full w-full object-cover" />
+              <div className="absolute bottom-2 right-2 flex items-end gap-2">
+                {!generatingDesc && (
+                  <div className="relative">
+                    <div className="border-2 border-on-surface bg-white px-2 py-1.5 text-[10px] font-black leading-tight max-w-[130px]">
+                      Este comic lo conozco... ¿Te ayudo con la descripción?
+                    </div>
+                    <div className="absolute -right-2 bottom-2 h-0 w-0 border-b-[5px] border-l-[8px] border-t-[5px] border-b-transparent border-l-on-surface border-t-transparent" />
+                    <div className="absolute -right-[5px] bottom-[9px] h-0 w-0 border-b-[4px] border-l-[6px] border-t-[4px] border-b-transparent border-l-white border-t-transparent" />
+                  </div>
                 )}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleGenerateDescription}
+                  disabled={generatingDesc}
+                  title="Generar con Stan Lee"
+                  className="h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 border-on-surface bg-white transition-transform hover:scale-110 disabled:opacity-50"
+                >
+                  {generatingDesc ? (
+                    <span className="flex h-full w-full items-center justify-center text-xs font-bold animate-spin">
+                      ↻
+                    </span>
+                  ) : (
+                    <img src={stanLeeImg} alt="Generar con Stan Lee" className="h-full w-full object-cover" />
+                  )}
+                </button>
+              </div>
             </div>
             {errors.description && (
               <span className="text-[10px] font-black uppercase text-error">{errors.description}</span>

@@ -104,12 +104,35 @@ export default function ChatWidget() {
         addMsg({ type: 'stanlee', text: `¡Encontré ${filtered.length} cómics para vos, verdadero creyente!` })
         addMsg({ type: 'stanlee-results', comics: filtered.slice(0, 6) })
       }
-      addMsg({ type: 'stanlee', text: '¡Hasta la próxima, verdadero creyente! El Profesor Xavier te acompaña desde aquí. 📞' })
-      setPhase('xavier')
+      addMsg({ type: 'stanlee-more-options', consumed: false })
+      setPhase('stanlee-ask-more')
     } catch {
       addMsg({ type: 'stanlee', text: 'Ups, no pude cargar las recomendaciones. Intentá de nuevo.' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleMoreSelect(wantsMore) {
+    setMessages((prev) =>
+      prev.map((m) => m.type === 'stanlee-more-options' ? { ...m, consumed: true } : m)
+    )
+    if (wantsMore) {
+      addMsg({ type: 'user', text: '¡Sí, recomendame otro!' })
+      setTimeout(() => {
+        addMsg({ type: 'stanlee', text: '¡Perfecto! ¿Cómo querés que te recomiende esta vez?' })
+        addMsg({ type: 'stanlee-mode-options', consumed: false })
+        setPhase('stanlee-mode')
+      }, 400)
+    } else {
+      addMsg({ type: 'user', text: 'No, gracias.' })
+      setTimeout(() => {
+        addMsg({ type: 'stanlee', text: '¡Hasta la próxima, verdadero creyente! 📞' })
+        setTimeout(() => {
+          addMsg({ type: 'xavier', text: '¡Gracias, Stan! 😄' })
+          setPhase('xavier')
+        }, 800)
+      }, 400)
     }
   }
 
@@ -134,11 +157,12 @@ export default function ChatWidget() {
           onClose={() => setOpen(false)}
           onModeSelect={handleModeSelect}
           onFormSubmit={handleFormSubmit}
+          onMoreSelect={handleMoreSelect}
           onNavigate={navigate}
         />
       ) : (
-        <div className="relative">
-          <div className="absolute bottom-full right-0 mb-3 border-2 border-on-surface bg-white px-3 py-2 comic-shadow-sm whitespace-nowrap">
+        <div className="relative group">
+          <div className="absolute bottom-full right-0 mb-3 border-2 border-on-surface bg-white px-3 py-2 comic-shadow-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             <span className="font-headline text-xs font-black uppercase tracking-widest">
               ¿NECESITAS AYUDA?
             </span>
@@ -161,7 +185,7 @@ export default function ChatWidget() {
 
 // ─── Sub-components (no exportados) ───────────────────────────
 
-function ChatPanel({ messages, input, loading, phase, endRef, onInput, onSend, onClose, onModeSelect, onFormSubmit, onNavigate }) {
+function ChatPanel({ messages, input, loading, phase, endRef, onInput, onSend, onClose, onModeSelect, onFormSubmit, onMoreSelect, onNavigate }) {
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -199,6 +223,7 @@ function ChatPanel({ messages, input, loading, phase, endRef, onInput, onSend, o
             msg={msg}
             onModeSelect={onModeSelect}
             onFormSubmit={onFormSubmit}
+            onMoreSelect={onMoreSelect}
             onNavigate={onNavigate}
           />
         ))}
@@ -208,7 +233,7 @@ function ChatPanel({ messages, input, loading, phase, endRef, onInput, onSend, o
               <img src={xavierImg} alt="" className="h-full w-full object-cover" />
             </div>
             <div className="border-2 border-on-surface bg-surface-container px-3 py-2">
-              <span className="font-body text-sm animate-pulse">...</span>
+              <span className="font-body text-sm font-bold animate-pulse">...</span>
             </div>
           </div>
         )}
@@ -239,12 +264,12 @@ function ChatPanel({ messages, input, loading, phase, endRef, onInput, onSend, o
   )
 }
 
-function MessageItem({ msg, onModeSelect, onFormSubmit, onNavigate }) {
+function MessageItem({ msg, onModeSelect, onFormSubmit, onMoreSelect, onNavigate }) {
   if (msg.type === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[75%] border-2 border-on-surface bg-primary-container px-3 py-2">
-          <p className="font-body text-sm">{msg.text}</p>
+        <div className="max-w-[75%] border-2 border-on-surface bg-primary px-3 py-2">
+          <p className="font-body text-sm font-bold text-on-primary">{msg.text}</p>
         </div>
       </div>
     )
@@ -257,7 +282,7 @@ function MessageItem({ msg, onModeSelect, onFormSubmit, onNavigate }) {
           <img src={xavierImg} alt="Xavier" className="h-full w-full object-cover" />
         </div>
         <div className="max-w-[75%] border-2 border-on-surface bg-surface-container px-3 py-2">
-          <p className="font-body text-sm">{msg.text}</p>
+          <p className="font-body text-sm font-bold">{msg.text}</p>
         </div>
       </div>
     )
@@ -273,7 +298,7 @@ function MessageItem({ msg, onModeSelect, onFormSubmit, onNavigate }) {
           {msg.type === 'stanlee-calling' ? (
             <p className="font-body text-sm animate-bounce">📞</p>
           ) : (
-            <p className="font-body text-sm">{msg.text}</p>
+            <p className="font-body text-sm font-bold">{msg.text}</p>
           )}
         </div>
       </div>
@@ -314,6 +339,38 @@ function MessageItem({ msg, onModeSelect, onFormSubmit, onNavigate }) {
 
   if (msg.type === 'stanlee-results') {
     return <StanLeeResults comics={msg.comics} onNavigate={onNavigate} />
+  }
+
+  if (msg.type === 'stanlee-more-options') {
+    if (msg.consumed) return null
+    return (
+      <div className="flex items-start gap-2">
+        <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full border-2 border-on-surface">
+          <img src={stanLeeImg} alt="Stan Lee" className="h-full w-full object-cover" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="border-2 border-on-surface bg-secondary-container px-3 py-2">
+            <p className="font-body text-sm font-bold">¿Querés que te recomiende otro?</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onMoreSelect(true)}
+              className="btn-primary px-3 py-2 text-xs"
+            >
+              ¡Sí!
+            </button>
+            <button
+              type="button"
+              onClick={() => onMoreSelect(false)}
+              className="btn-secondary px-3 py-2 text-xs"
+            >
+              No, gracias
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return null
@@ -421,14 +478,23 @@ function StanLeeResults({ comics, onNavigate }) {
 
   return (
     <div className="ml-9 w-[270px]">
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex gap-3 overflow-x-auto pb-2 overflow-y-visible">
         {comics.map((comic) => (
           <button
             key={comic.id}
             type="button"
             onClick={() => onNavigate(`/product/${comic.id}`)}
-            className="shrink-0 w-[90px] border-2 border-on-surface bg-white text-left comic-shadow-sm transition-transform hover:-translate-y-0.5"
+            className="group/card relative shrink-0 w-[90px] border-2 border-on-surface bg-white text-left comic-shadow-sm transition-transform hover:-translate-y-0.5"
           >
+            {comic.description && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 w-[160px] pointer-events-none opacity-0 group-hover/card:opacity-100 transition-opacity duration-150">
+                <div className="border-2 border-on-surface bg-white px-2 py-1.5">
+                  <p className="font-body text-[9px] leading-tight line-clamp-4">{comic.description}</p>
+                </div>
+                <span className="absolute -bottom-[9px] left-1/2 -translate-x-1/2 h-0 w-0 border-x-[8px] border-t-[9px] border-x-transparent border-t-on-surface" />
+                <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-0 w-0 border-x-[8px] border-t-[8px] border-x-transparent border-t-white" />
+              </div>
+            )}
             <div className="h-[110px] overflow-hidden border-b-2 border-on-surface">
               {comic.imageUrl ? (
                 <img

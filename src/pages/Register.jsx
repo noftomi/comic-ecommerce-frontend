@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { fadeUp } from "../utils/motionVariants";
 import { register } from "../services/authService";
 
 export default function Register() {
@@ -98,7 +100,8 @@ export default function Register() {
         backgroundColor: "#FFF9E8",
       }}
     >
-      <div
+      <motion.div
+        {...fadeUp}
         className="w-full max-w-2xl bg-surface border-4 border-on-surface relative overflow-hidden"
         style={{ boxShadow: "8px 8px 0px 0px #1e1c0e" }}
       >
@@ -464,7 +467,7 @@ export default function Register() {
             </Link>
           </footer>
         </div>
-      </div>
+      </motion.div>
     </main>
   );
 }
