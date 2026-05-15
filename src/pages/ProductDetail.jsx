@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { getById } from '../services/comicsService'
 import useCartStore from '../store/cartStore'
 import { useAuth } from '../context/AuthContext'
@@ -7,6 +8,7 @@ import { addFavorite, removeFavorite, getFavorites } from '../services/favorites
 import { getReviews, createReview, deleteReview } from '../services/reviewsService'
 import { Heart, Share2, Trash2 } from 'lucide-react'
 import RelatedComics from '../components/RelatedComics'
+import { fromLeft, fromRight } from '../utils/motionVariants'
 
 function formatPrice(value) {
   return `$${Number(value).toFixed(2)}`
@@ -33,6 +35,18 @@ function formatDate(dateString) {
   }).toUpperCase()
 }
 
+function getInitials(name) {
+  if (!name) return '?'
+  return name.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase()
+}
+
+const AVATAR_COLORS = [
+  'bg-primary text-on-primary',
+  'bg-secondary-container text-on-surface',
+  'bg-tertiary-container text-on-surface',
+  'bg-error-container text-on-surface',
+]
+
 export default function ProductDetail() {
   const { id } = useParams()
   const [product, setProduct] = useState(null)
@@ -46,6 +60,7 @@ export default function ProductDetail() {
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [reviewError, setReviewError] = useState('')
+  const [descExpanded, setDescExpanded] = useState(false)
 
   const addToCart = useCartStore((state) => state.addToCart)
   const openCart = useCartStore((state) => state.openCart)
@@ -144,17 +159,24 @@ export default function ProductDetail() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-12">
-      {/* Producto */}
-      <div className="flex flex-col items-start gap-12 lg:flex-row">
-        <div className="lg:w-1/2">
-          <div className="comic-shadow inline-block border-2 border-on-surface bg-white p-4">
-            <img src={product.imageUrl} alt={product.title} className="h-auto max-w-full border-2 border-on-surface" />
+    <main className="overflow-x-hidden">
+      {/* Producto — dos columnas, imagen con misma relación 2:3 que catálogo */}
+      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-start lg:gap-10">
+        <motion.div {...fromLeft} className="w-full lg:w-2/5 flex flex-col">
+          <div className="relative aspect-[2/3] border-2 border-on-surface bg-white comic-shadow">
+            <div className="absolute inset-4">
+              <img
+                src={product.imageUrl}
+                alt={product.title}
+                className="h-full w-full object-contain"
+              />
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="space-y-6 lg:w-1/2">
-          <h1 className="font-headline text-7xl font-black uppercase leading-none text-on-surface md:text-8xl">
+        <motion.div {...fromRight} className="flex flex-col gap-4 lg:w-3/5">
+          <h1 className="font-headline text-4xl font-black uppercase leading-none text-on-surface lg:text-5xl">
             {product.title}
           </h1>
 
@@ -167,87 +189,135 @@ export default function ProductDetail() {
             <span className="font-label text-xs font-bold uppercase underline tracking-tight">
               {reviews.length} Reseñas
             </span>
-            <button type="button" onClick={handleFavorite} aria-label="Añadir a favoritos" className="p-0.5 transition-transform duration-100 active:scale-125">
+            <button type="button" onClick={handleFavorite} aria-label="Añadir a favoritos" className="p-0.5 transition-transform duration-150 active:scale-125">
               <Heart size={20} className={isFavorite ? 'fill-primary text-primary' : 'text-on-surface'} />
             </button>
-            <button type="button" onClick={handleShare} aria-label="Compartir" className="p-0.5 transition-transform duration-100 active:scale-125">
+            <button type="button" onClick={handleShare} aria-label="Compartir" className="p-0.5 transition-transform duration-150 active:scale-125">
               <Share2 size={20} className="text-on-surface" />
             </button>
             {copied && <span className="text-[10px] font-bold uppercase text-primary">¡URL copiada!</span>}
           </div>
 
-          <p className="max-w-lg font-body text-xs font-bold uppercase italic leading-relaxed opacity-80">
-            {product.description} Una entrega esencial para coleccionistas que buscan narrativa intensa, arte de alto impacto y edición premium dentro del universo de {product.publisher}.
-          </p>
+          <div>
+            <p className={`font-body text-xs font-bold uppercase italic leading-relaxed opacity-80 ${descExpanded ? '' : 'line-clamp-3'}`}>
+              {product.description} Una entrega esencial para coleccionistas que buscan narrativa intensa, arte de alto impacto y edición premium dentro del universo de {product.publisher}.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDescExpanded((v) => !v)}
+              className="mt-1 font-body text-[10px] font-black uppercase underline underline-offset-2 text-primary"
+            >
+              {descExpanded ? 'Leer menos' : 'Leer más'}
+            </button>
+          </div>
 
-          <div className="flex flex-wrap gap-2">
-            <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">{product.publisher}</span>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="border-2 border-on-surface px-2 py-0.5 font-label text-[10px] font-bold uppercase">{product.publisher}</span>
             {product.pages && (
-              <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">Páginas: {product.pages}</span>
+              <span className="border-2 border-on-surface px-2 py-0.5 font-label text-[10px] font-bold uppercase">Páginas: {product.pages}</span>
             )}
             {product.edition && (
-              <span className="border-2 border-on-surface px-3 py-1 font-label text-[10px] font-bold uppercase">{product.edition}</span>
+              <span className="border-2 border-on-surface px-2 py-0.5 font-label text-[10px] font-bold uppercase">{product.edition}</span>
             )}
           </div>
 
-          <hr className="border-t-2 border-on-surface" />
-
-          <div>
-            <p className="font-headline text-xl font-black uppercase">Cantidad</p>
-            <div className="comic-shadow-sm mt-4 inline-flex items-center border-2 border-on-surface bg-white">
-              <button type="button" onClick={() => setQty((c) => Math.max(1, c - 1))} className="border-r-2 border-on-surface px-4 py-2 text-xl font-bold transition-colors duration-75 hover:bg-surface-dim">-</button>
-              <span className="px-8 py-2 text-lg font-bold">{qty}</span>
-              <button type="button" onClick={() => setQty((c) => c + 1)} className="border-l-2 border-on-surface px-4 py-2 text-xl font-bold transition-colors duration-75 hover:bg-surface-dim">+</button>
+          {/* Grupo de acción — empujado al fondo de la columna */}
+          <div className="mt-auto space-y-3 border-t-2 border-on-surface pt-4">
+            <div>
+              <p className="font-headline text-sm font-black uppercase">Cantidad</p>
+              <div className="comic-shadow-sm mt-2 inline-flex items-center border-2 border-on-surface bg-white">
+                <button type="button" onClick={() => setQty((c) => Math.max(1, c - 1))} className="border-r-2 border-on-surface px-4 py-2 text-xl font-bold transition-colors duration-150 hover:bg-surface-dim">-</button>
+                <span className="px-8 py-2 text-lg font-bold">{qty}</span>
+                <button type="button" onClick={() => setQty((c) => c + 1)} className="border-l-2 border-on-surface px-4 py-2 text-xl font-bold transition-colors duration-150 hover:bg-surface-dim">+</button>
+              </div>
             </div>
-          </div>
 
-          <div className="pt-4 font-headline text-5xl font-black">{formatPrice(product.price)}</div>
+            <div className="font-headline text-3xl font-black">{formatPrice(product.price)}</div>
 
-          <div className="flex flex-col gap-4">
-            <button type="button" onClick={addWithQuantity} className="btn-primary w-full py-4 text-3xl md:w-[400px]">AÑADIR AL CARRITO</button>
-            <button type="button" onClick={addWithQuantity} className="btn-secondary w-full py-4 text-3xl md:w-[400px]">COMPRAR AHORA</button>
+            <button type="button" onClick={addWithQuantity} className="btn-primary w-full py-3 text-xl">AÑADIR AL CARRITO</button>
+            <button type="button" onClick={addWithQuantity} className="btn-secondary w-full py-3 text-xl">COMPRAR AHORA</button>
           </div>
-        </div>
+        </motion.div>
+      </div>
       </div>
 
-      {/* Reseñas */}
-      <section className="mt-20 border-t-4 border-on-surface pt-12">
-        <h2 className="mb-12 inline-block border-b-8 border-on-surface pb-4 font-headline text-4xl font-black uppercase tracking-tighter md:text-5xl">
+      {/* Recomendaciones — primero, ancho completo */}
+      <RelatedComics comicId={Number(id)} />
+
+      {/* Reseñas — ancho completo */}
+      <motion.section
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        className="mt-20 border-t-4 border-on-surface pt-12"
+      >
+        <div className="max-w-[1500px] mx-auto px-4 md:px-6">
+        <h2 className="mb-12 w-fit border-b-8 border-on-surface pb-4 font-headline text-4xl font-black uppercase tracking-tighter md:text-5xl">
           RESEÑAS DE LA COMUNIDAD
         </h2>
 
-        <div className="grid grid-cols-1 gap-16 lg:grid-cols-3">
-          <div className="space-y-10 lg:col-span-2">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-5">
+          <div className="space-y-6 lg:col-span-3">
             {reviews.length === 0 ? (
               <p className="font-body text-sm font-bold uppercase opacity-60">Todavía no hay reseñas. ¡Sé el primero!</p>
             ) : (
               reviews.map((review) => (
-                <div key={review.id} className="border-b border-on-surface/10 pb-10">
-                  <div className="mb-4 flex items-start justify-between">
-                    <div>
-                      <p className="font-headline text-sm font-black uppercase">{review.user.name}</p>
-                      <p className="text-[10px] font-bold uppercase opacity-50">{formatDate(review.createdAt)}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex">
-                        {Array.from({ length: 5 }).map((_, index) => (
-                          <Star key={index} filled={index < review.rating} />
+                <div key={review.id} className="flex items-start gap-5">
+                  {/* Avatar con iniciales */}
+                  <div
+                    className={`shrink-0 w-14 h-14 rounded-full border-2 border-on-surface comic-shadow-sm flex items-center justify-center font-headline font-black text-base ${
+                      AVATAR_COLORS[(review.user.id || 0) % AVATAR_COLORS.length]
+                    }`}
+                  >
+                    {getInitials(review.user.name)}
+                  </div>
+
+                  {/* Viñeta de diálogo */}
+                  <div className="flex-1 min-w-0">
+                    <div className="rounded-[16px] border-2 border-on-surface bg-white comic-shadow-sm p-6">
+                      {/* Nombre + fecha + borrar */}
+                      <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                        <p className="font-headline text-lg font-black uppercase leading-none">
+                          {review.user.name}
+                        </p>
+                        <div className="flex shrink-0 items-center gap-3">
+                          <p className="text-[9px] font-medium uppercase opacity-40">
+                            {formatDate(review.createdAt)}
+                          </p>
+                          {user?.id === review.user.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReview(review.id)}
+                              className="text-error hover:opacity-70"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Estrellas */}
+                      <div className="mb-4 flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} filled={i < review.rating} size="h-6 w-6" />
                         ))}
                       </div>
-                      {user?.id === review.user.id && (
-                        <button type="button" onClick={() => handleDeleteReview(review.id)} className="text-error hover:opacity-70">
-                          <Trash2 size={14} />
-                        </button>
+
+                      {/* Comentario */}
+                      {review.comment && (
+                        <p className="font-body text-xl font-medium leading-relaxed text-on-surface">
+                          {review.comment}
+                        </p>
                       )}
                     </div>
                   </div>
-                  {review.comment && <p className="text-sm leading-relaxed">{review.comment}</p>}
                 </div>
               ))
             )}
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <div className="comic-shadow border-4 border-on-surface bg-white p-6">
               <h3 className="mb-6 font-headline text-xl font-black uppercase tracking-tight">ESCRIBE TU RESEÑA</h3>
               <form className="space-y-4" onSubmit={handleSubmitReview}>
@@ -292,9 +362,8 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
-      </section>
-
-      <RelatedComics comicId={Number(id)} />
+        </div>
+      </motion.section>
     </main>
   )
 }

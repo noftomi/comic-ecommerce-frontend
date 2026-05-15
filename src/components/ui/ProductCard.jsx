@@ -18,6 +18,9 @@ export default function ProductCard({ product }) {
   const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem)
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem)
 
+  // Sin seller o seller con rol ADMIN → Comics Corp; seller SELLER → Terceros
+  const isAdminComic = !product.seller || product.seller.role === 'ADMIN'
+
   const handleAddToCart = (event) => {
     event.stopPropagation()
     addToCart(product)
@@ -35,19 +38,34 @@ export default function ProductCard({ product }) {
   }
 
   return (
-    <div className="group relative">
-      <div className="absolute -inset-1 bg-primary opacity-0 transition-opacity duration-75 group-hover:opacity-100" />
-      <article className="product-card relative z-10 h-full" onClick={() => navigate(`/product/${product.id}`)}>
-        <div className="aspect-[2/3] overflow-hidden gutter-line bg-surface-dim relative">
+    <div className="group relative h-full">
+      <div className="absolute -inset-1 bg-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+      <article
+        className="product-card relative z-10 h-full"
+        onClick={() => navigate(`/product/${product.id}`)}
+      >
+        {/* Imagen — cubre todo el área hasta el contenido blanco */}
+        <div className="aspect-[2/3] relative overflow-hidden gutter-line bg-surface-dim">
           <img
             src={product.imageUrl}
             alt={product.title}
-            className="h-80 w-full object-cover transition-transform duration-150 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
           />
+
+          {/* Flag vendedor — arriba a la derecha */}
+          <div
+            className={`absolute right-0 top-0 z-10 border-b-2 border-l-2 border-on-surface px-2.5 py-1.5 font-headline text-xs font-black uppercase leading-none ${
+              isAdminComic ? 'bg-primary text-on-primary' : 'bg-on-surface text-background'
+            }`}
+          >
+            {isAdminComic ? 'Comics Corp' : 'Terceros'}
+          </div>
+
+          {/* Botón favorito — arriba a la izquierda */}
           <button
             type="button"
             onClick={handleFavorite}
-            className="absolute top-2 right-2 p-1.5 bg-surface border-2 border-on-surface rounded-full transition-colors duration-150"
+            className="absolute left-2 top-2 z-10 rounded-full border-2 border-on-surface bg-surface p-1.5 transition-colors duration-150"
             aria-label="Añadir a favoritos"
           >
             <Heart
@@ -57,23 +75,28 @@ export default function ProductCard({ product }) {
           </button>
         </div>
 
-        <div className="flex-grow p-4">
-          <div className="mb-3 flex items-center justify-between gap-4">
+        {/* Detalle del cómic */}
+        <div className="flex-grow p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <span className="badge bg-primary text-on-primary">
               {product.edition || product.publisher}
             </span>
-            <span className="font-headline text-xl font-black text-primary shrink-0">
+            <span className="font-headline text-base font-black text-primary shrink-0">
               {formatPrice(product.price)}
             </span>
           </div>
-          <h3 className="font-headline text-2xl font-black leading-none uppercase">{product.title}</h3>
-          <p className="font-body text-[10px] font-bold uppercase opacity-60">Editorial: {product.publisher}</p>
+          <h3 className="line-clamp-2 font-headline text-lg font-black uppercase leading-tight">
+            {product.title}
+          </h3>
+          <p className="mt-1 line-clamp-1 font-body text-[10px] font-bold uppercase opacity-60">
+            Editorial: {product.publisher}
+          </p>
         </div>
 
         <button
           type="button"
           onClick={handleAddToCart}
-          className="w-full bg-on-surface py-3 font-headline text-lg font-black uppercase text-background transition-colors duration-75 hover:bg-primary"
+          className="btn-primary w-full py-2 text-sm"
         >
           AÑADIR AL CARRITO
         </button>

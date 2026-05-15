@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { getAll } from '../services/comicsService'
 import FilterSidebar from '../components/ui/FilterSidebar'
 import ProductCard from '../components/ui/ProductCard'
+import PaginationControls from '../components/ui/PaginationControls'
+import { fromLeft, fromRight, gridContainer, gridCard } from '../utils/motionVariants'
 
 const heroCover =
-  'https://lh3.googleusercontent.com/aida/ADBb0uic7xV0V4bW7jsbZMMBxb1q0voi_ej0404me6EymnHGqGI7asqFzL4f7UTv8e2vZpUM9RJx75anLcptYFASlljd-InY1rRD_yZBNgVvx1MPJ7Z6vWxV3Vt_9IuS8kQMuIq6HZ91U15WRDLFejDCGPmrAt01ukJ_c6vFOjT3bRSXf4tcvjo0MFuYd4l42kBoGW1Dg738kOftqAYl5SIO4u4uk0tjmB6K-SJ9gfuOU6dXR6JQYyfSnKqi1GlgPe9HyRtbqmxbDMTP'
+  'https://lh3.googleusercontent.com/aida/ADBb0uic7xV0V4bW7jsbZMMBxb1q0voi_ej0404me6EymnHGqGI7asqFzL4f7UTv8e2vZpUM9RJx75anLcptYFASlljd-InY1rRD_yZBNgVvx1MPJ7Z6vWxV3Vt_9IuS8kQMuIq6HZ91U15WRDLFejDCGPmrAt01ukJ_c6vFOjT3bRSXf4tcvjo0MFuYd4l42kBoGW1Dg738kOftqAYl5SIO4u4uk0tjmB6K-SJ9gfuOU6dXR6JQyfSnKqi1GlgPe9HyRtbqmxbDMTP'
 
 const defaultPublishers = {
   Marvel: false,
@@ -13,6 +16,8 @@ const defaultPublishers = {
   'Dark Horse': false,
 }
 
+const ITEMS_PER_PAGE = 12
+
 export default function Home() {
   const gridRef = useRef(null)
   const [comics, setComics] = useState([])
@@ -20,6 +25,8 @@ export default function Home() {
   const [error, setError] = useState(false)
   const [selectedPublishers, setSelectedPublishers] = useState(defaultPublishers)
   const [sortOrder, setSortOrder] = useState('featured')
+  const [page, setPage] = useState(1)
+  const [filterKey, setFilterKey] = useState(0)
 
   useEffect(() => {
     getAll()
@@ -27,6 +34,10 @@ export default function Home() {
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    setPage(1)
+  }, [selectedPublishers, sortOrder])
 
   const filteredProducts = useMemo(() => {
     const hasAnyPublisherSelected = Object.values(selectedPublishers).some(Boolean)
@@ -38,26 +49,42 @@ export default function Home() {
     return byPublisher
   }, [comics, selectedPublishers, sortOrder])
 
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
+  const pageItems = filteredProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+
   const handlePublisherToggle = (publisher) => {
-    setSelectedPublishers((current) => ({
-      ...current,
-      [publisher]: !current[publisher],
-    }))
+    setSelectedPublishers((current) => ({ ...current, [publisher]: !current[publisher] }))
+    setFilterKey((k) => k + 1)
+  }
+
+  const handleSortChange = (sort) => {
+    setSortOrder(sort)
+    setFilterKey((k) => k + 1)
   }
 
   const handleClearFilters = () => {
     setSelectedPublishers(defaultPublishers)
     setSortOrder('featured')
+    setFilterKey((k) => k + 1)
   }
 
   const scrollToGrid = () => {
     gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <main className="w-full">
+      {/* Hero */}
       <section className="flex min-h-[600px] flex-col border-b-2 border-on-surface md:flex-row">
-        <div className="flex flex-col justify-center p-8 md:w-1/2 md:p-16">
+        <motion.div
+          {...fromLeft}
+          className="flex flex-col justify-center p-8 md:w-1/2 md:p-16"
+        >
           <h1 className="font-headline text-6xl leading-none uppercase md:text-8xl">
             <span>La Mejor</span>
             <br />
@@ -85,14 +112,17 @@ export default function Home() {
             <button
               type="button"
               onClick={scrollToGrid}
-              className="comic-shadow-sm border-2 border-on-surface bg-white px-8 py-3 font-headline text-xl font-black uppercase transition-transform duration-75 hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-1 active:translate-y-1 active:shadow-none"
+              className="comic-shadow-sm border-2 border-on-surface bg-white px-8 py-3 font-headline text-xl font-black uppercase transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-1 active:translate-y-1 active:shadow-none"
             >
               VER COMICS
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="relative flex items-center justify-center overflow-hidden bg-[#0C1E23] p-8 md:w-1/2">
+        <motion.div
+          {...fromRight}
+          className="relative flex items-center justify-center overflow-hidden bg-[#0C1E23] p-8 md:w-1/2"
+        >
           <div className="absolute right-10 top-10 z-10 animate-pulse">
             <svg width="80" height="80" viewBox="0 0 100 100" className="drop-shadow-none">
               <polygon
@@ -118,39 +148,64 @@ export default function Home() {
             alt="Comic destacado"
             className="comic-shadow max-h-[500px] rotate-[-2deg] border-4 border-white object-cover"
           />
-        </div>
+        </motion.div>
       </section>
 
-      <section ref={gridRef} className="container mx-auto flex flex-col gap-12 px-4 py-16 md:flex-row">
-        <FilterSidebar
-          selectedPublishers={selectedPublishers}
-          sortOrder={sortOrder}
-          onPublisherToggle={handlePublisherToggle}
-          onSortChange={setSortOrder}
-          onClearFilters={handleClearFilters}
-        />
+      {/* Grid + Filtros */}
+      <section
+        ref={gridRef}
+        className="container mx-auto px-4 py-16 scroll-mt-20"
+      >
+        <div className="flex flex-col gap-12 md:flex-row md:items-start">
+          <FilterSidebar
+            selectedPublishers={selectedPublishers}
+            sortOrder={sortOrder}
+            onPublisherToggle={handlePublisherToggle}
+            onSortChange={handleSortChange}
+            onClearFilters={handleClearFilters}
+          />
 
-        <div className="md:w-3/4">
-          {loading ? (
-            <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
-              Cargando cómics...
-            </div>
-          ) : error ? (
-            <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
-              Error al cargar los cómics. Intentá de nuevo más tarde.
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
-              No hay cómics con esos filtros.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          <div className="md:w-3/4">
+            {loading ? (
+              <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
+                Cargando cómics...
+              </div>
+            ) : error ? (
+              <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
+                Error al cargar los cómics. Intentá de nuevo más tarde.
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="comic-shadow-sm border-2 border-on-surface bg-surface-container p-8 text-center font-headline text-xl font-black uppercase">
+                No hay cómics con esos filtros.
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${page}-${filterKey}`}
+                  className="grid grid-cols-2 gap-5 lg:grid-cols-4"
+                  variants={gridContainer}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                >
+                  {pageItems.map((product) => (
+                    <motion.div key={product.id} variants={gridCard}>
+                      <ProductCard product={product} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
         </div>
+
+        {!loading && !error && filteredProducts.length > 0 && (
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </section>
     </main>
   )

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Truck } from 'lucide-react'
+import { motion } from 'framer-motion'
 import useCartStore from '../store/cartStore'
 import { createOrder } from '../services/ordersService'
+import { fadeUp, fromLeft, fromRight } from '../utils/motionVariants'
 
 const HALFTONE = {
   backgroundImage: 'radial-gradient(#1e1c0e 10%, transparent 11%)',
@@ -48,7 +50,7 @@ export default function Checkout() {
           backgroundColor: '#FFF9EA',
         }}
       >
-        <div className="text-center">
+        <motion.div {...fadeUp} className="text-center">
           <div className="text-6xl mb-6">🛒</div>
           <h1 className="font-headline font-black text-3xl uppercase tracking-tighter text-on-surface mb-4">
             Tu carrito está <span className="text-primary">vacío</span>
@@ -59,7 +61,7 @@ export default function Checkout() {
           >
             Ir al catálogo
           </Link>
-        </div>
+        </motion.div>
       </main>
     )
   }
@@ -68,7 +70,10 @@ export default function Checkout() {
     <main className="bg-surface min-h-screen px-6 py-12">
       <div className="max-w-[1440px] mx-auto">
 
-        <h1 className="font-headline font-black text-5xl md:text-6xl tracking-tighter uppercase mb-12 flex items-center gap-4 text-on-surface">
+        <motion.h1
+          {...fadeUp}
+          className="font-headline font-black text-5xl md:text-6xl tracking-tighter uppercase mb-12 flex items-center gap-4 text-on-surface"
+        >
           TU CARRITO{' '}
           <span
             className="bg-primary-container text-on-primary px-3 py-1 text-2xl border-2 border-on-surface"
@@ -76,15 +81,18 @@ export default function Checkout() {
           >
             {String(itemCount).padStart(2, '0')}
           </span>
-        </h1>
+        </motion.h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
           {/* Lista de productos */}
-          <div className="lg:col-span-8 space-y-6">
-            {items.map((item) => (
-              <div
+          <motion.div {...fromLeft} className="lg:col-span-8 space-y-6">
+            {items.map((item, i) => (
+              <motion.div
                 key={item.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut', delay: 0.15 + i * 0.08 }}
                 className="bg-surface-container-low border-2 border-on-surface p-6 flex flex-col md:flex-row gap-6 items-center relative overflow-hidden"
                 style={{ boxShadow: '6px 6px 0px 0px #1E1C0E' }}
               >
@@ -139,12 +147,12 @@ export default function Checkout() {
                     {formatPrice(item.price * item.qty)}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Sidebar de resumen */}
-          <aside className="lg:col-span-4 sticky top-24">
+          <motion.aside {...fromRight} className="lg:col-span-4 sticky top-24">
             <div
               className="bg-surface-container-high border-2 border-on-surface p-8 space-y-8 relative overflow-hidden"
               style={{ boxShadow: '6px 6px 0px 0px #1E1C0E' }}
@@ -157,23 +165,17 @@ export default function Checkout() {
 
               <div className="space-y-3 relative z-10">
                 <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant uppercase tracking-widest text-xs font-body font-bold">
-                    SUBTOTAL
-                  </span>
+                  <span className="text-on-surface-variant uppercase tracking-widest text-xs font-body font-bold">SUBTOTAL</span>
                   <span className="font-headline font-black text-lg">{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant uppercase tracking-widest text-xs font-body font-bold">
-                    ENVÍO
-                  </span>
+                  <span className="text-on-surface-variant uppercase tracking-widest text-xs font-body font-bold">ENVÍO</span>
                   <span className="font-headline font-black text-lg text-secondary">GRATIS</span>
                 </div>
                 <div className="h-0.5 bg-on-surface" />
                 <div className="flex justify-between items-baseline">
                   <span className="font-headline font-black text-2xl uppercase">TOTAL</span>
-                  <span className="font-headline font-black text-5xl text-primary leading-none">
-                    {formatPrice(total)}
-                  </span>
+                  <span className="font-headline font-black text-5xl text-primary leading-none">{formatPrice(total)}</span>
                 </div>
               </div>
 
@@ -193,7 +195,6 @@ export default function Checkout() {
                 </p>
               </div>
 
-              {/* Callout envío */}
               <div className="bg-secondary-container border-2 border-on-surface p-4 flex gap-4 items-center relative z-10">
                 <Truck size={28} className="shrink-0 text-on-surface" />
                 <div>
@@ -204,7 +205,7 @@ export default function Checkout() {
                 </div>
               </div>
             </div>
-          </aside>
+          </motion.aside>
 
         </div>
       </div>

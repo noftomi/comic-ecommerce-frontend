@@ -1,8 +1,10 @@
 import { X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext'
 import useCartStore from '../../store/cartStore'
 import useFavoritesStore from '../../store/favoritesStore'
 import { Link } from 'react-router-dom'
+import { drawerItem } from '../../utils/motionVariants'
 
 export default function FavoritesDrawer() {
   const { user } = useAuth()
@@ -35,7 +37,6 @@ export default function FavoritesDrawer() {
         }`}
         aria-hidden={!isOpen}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-on-surface p-6">
           <div className="flex items-center gap-3">
             <div className="border-2 border-on-surface bg-primary p-2 text-on-primary">
@@ -46,14 +47,13 @@ export default function FavoritesDrawer() {
           <button
             type="button"
             onClick={closeFavorites}
-            className="border-2 border-on-surface bg-primary p-1 text-on-primary transition-colors duration-75 hover:bg-primary-container"
+            className="border-2 border-on-surface bg-primary p-1 text-on-primary transition-colors duration-150 hover:bg-primary-container"
             aria-label="Cerrar"
           >
             <X size={22} />
           </button>
         </div>
 
-        {/* Body */}
         <div className="flex-grow overflow-y-auto p-6">
           {!user ? (
             <div className="flex flex-col items-center gap-4 border-2 border-on-surface bg-surface-container p-6 text-center">
@@ -62,7 +62,7 @@ export default function FavoritesDrawer() {
               </p>
               <button
                 type="button"
-                onClick={() => { closeFavorites(); openLogin(); }}
+                onClick={() => { closeFavorites(); openLogin() }}
                 className="btn-primary px-6 py-2 text-sm"
               >
                 Iniciar sesión
@@ -78,49 +78,54 @@ export default function FavoritesDrawer() {
               <p className="font-headline text-2xl font-black uppercase">No tenés favoritos aún</p>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.id} className="flex gap-4 border-2 border-on-surface bg-white p-3 mb-4">
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="h-24 w-16 shrink-0 border-2 border-on-surface object-cover"
-                />
-                <div className="flex-grow">
-                  <h3 className="font-headline text-sm font-black uppercase leading-none">{item.title}</h3>
-                  <p className="mt-1 font-body text-[10px] font-bold uppercase opacity-60">{item.author}</p>
-                  <p className="mt-2 font-headline font-black text-primary">${Number(item.price).toFixed(2)}</p>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(item.id)}
-                    className="mt-2 text-[10px] font-bold uppercase underline text-error"
-                  >
-                    Quitar de favoritos
-                  </button>
-                </div>
-              </div>
-            ))
+            <AnimatePresence>
+              {items.map((item) => (
+                <motion.div
+                  key={item.id}
+                  {...drawerItem}
+                  className="flex gap-4 border-2 border-on-surface bg-white p-3 mb-4"
+                >
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="h-24 w-16 shrink-0 border-2 border-on-surface object-cover"
+                  />
+                  <div className="flex-grow">
+                    <h3 className="font-headline text-sm font-black uppercase leading-none">{item.title}</h3>
+                    <p className="mt-1 font-body text-[10px] font-bold uppercase opacity-60">{item.author}</p>
+                    <p className="mt-2 font-headline font-black text-primary">${Number(item.price).toFixed(2)}</p>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(item.id)}
+                      className="mt-2 text-[10px] font-bold uppercase underline text-error"
+                    >
+                      Quitar de favoritos
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           )}
         </div>
 
-        {/* Footer */}
-      {user && (
-        <div className="border-t-2 border-on-surface p-6 space-y-3">
-          <Link
-            to="/perfil/favoritos"
-            onClick={closeFavorites}
-            className="block w-full text-center btn-primary py-2 text-sm"
-          >
-            VER TODOS MIS FAVORITOS
-          </Link>
-          <button
-            type="button"
-            onClick={closeFavorites}
-            className="block w-full text-center text-sm font-bold uppercase underline transition-colors duration-75 hover:text-primary"
-          >
-            Volver a la tienda
-          </button>
-        </div>
-      )}
+        {user && (
+          <div className="border-t-2 border-on-surface p-6 space-y-3">
+            <Link
+              to="/perfil/favoritos"
+              onClick={closeFavorites}
+              className="block w-full text-center btn-primary py-2 text-sm"
+            >
+              VER TODOS MIS FAVORITOS
+            </Link>
+            <button
+              type="button"
+              onClick={closeFavorites}
+              className="block w-full text-center text-sm font-bold uppercase underline transition-colors duration-150 hover:text-primary"
+            >
+              Volver a la tienda
+            </button>
+          </div>
+        )}
       </aside>
     </>
   )

@@ -1,7 +1,9 @@
 import { ShoppingCart, Trash2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import useCartStore from '../../store/cartStore'
 import { useAuth } from '../../context/AuthContext'
+import { drawerItem } from '../../utils/motionVariants'
 
 function formatPrice(value) {
   return `$${value.toFixed(2)}`
@@ -45,7 +47,7 @@ export default function CartDrawer() {
           <button
             type="button"
             onClick={closeCart}
-            className="border-2 border-on-surface bg-primary p-1 text-on-primary transition-colors duration-75 hover:bg-primary-container"
+            className="border-2 border-on-surface bg-primary p-1 text-on-primary transition-colors duration-150 hover:bg-primary-container"
             aria-label="Cerrar"
           >
             <X size={22} />
@@ -53,96 +55,102 @@ export default function CartDrawer() {
         </div>
 
         <div className="flex-grow space-y-4 overflow-y-auto p-6">
-         {!user ? (
-        <div className="flex flex-col items-center gap-4 border-2 border-on-surface bg-surface-container p-6 text-center">
-          <p className="font-body text-sm font-bold uppercase">
-            Debés loguearte para acceder al carrito.
-          </p>
-          <button
-            type="button"
-            onClick={() => { closeCart(); openLogin(); }}
-            className="btn-primary px-6 py-2 text-sm"
-          >
-            Iniciar sesión
-          </button>
-        </div>
-      ) : items.length === 0 ? (
-        <div className="border-2 border-on-surface bg-surface-container p-4 text-center font-body text-sm font-bold uppercase">
-          Tu carrito está vacío.
-        </div>
-      ) : (
-            items.map((item) => (
-              <div key={item.id} className="flex gap-4 border-2 border-on-surface bg-white p-3">
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="h-24 w-16 shrink-0 border-2 border-on-surface object-cover"
-                />
+          {!user ? (
+            <div className="flex flex-col items-center gap-4 border-2 border-on-surface bg-surface-container p-6 text-center">
+              <p className="font-body text-sm font-bold uppercase">
+                Debés loguearte para acceder al carrito.
+              </p>
+              <button
+                type="button"
+                onClick={() => { closeCart(); openLogin() }}
+                className="btn-primary px-6 py-2 text-sm"
+              >
+                Iniciar sesión
+              </button>
+            </div>
+          ) : items.length === 0 ? (
+            <div className="border-2 border-on-surface bg-surface-container p-4 text-center font-body text-sm font-bold uppercase">
+              Tu carrito está vacío.
+            </div>
+          ) : (
+            <AnimatePresence>
+              {items.map((item) => (
+                <motion.div
+                  key={item.id}
+                  {...drawerItem}
+                  className="flex gap-4 border-2 border-on-surface bg-white p-3"
+                >
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="h-24 w-16 shrink-0 border-2 border-on-surface object-cover"
+                  />
 
-                <div className="flex-grow">
-                  <h3 className="font-headline text-sm font-black uppercase leading-none">{item.title}</h3>
-                  <p className="mt-1 font-body text-[10px] font-bold uppercase opacity-60">
-                    Editorial: {item.publisher}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between gap-2">
-                    <span className="font-headline font-black text-primary">{formatPrice(item.price)}</span>
-                    <div className="inline-flex items-center border border-on-surface">
-                      <button
-                        type="button"
-                        className="px-2 py-0.5 text-xs font-bold hover:bg-surface-dim"
-                        onClick={() => updateQty(item.id, -1)}
-                        aria-label="Disminuir cantidad"
-                      >
-                        -
-                      </button>
-                      <span className="px-3 text-xs font-bold">{item.qty}</span>
-                      <button
-                        type="button"
-                        className="px-2 py-0.5 text-xs font-bold hover:bg-surface-dim"
-                        onClick={() => updateQty(item.id, 1)}
-                        aria-label="Aumentar cantidad"
-                      >
-                        +
-                      </button>
+                  <div className="flex-grow">
+                    <h3 className="font-headline text-sm font-black uppercase leading-none">{item.title}</h3>
+                    <p className="mt-1 font-body text-[10px] font-bold uppercase opacity-60">
+                      Editorial: {item.publisher}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <span className="font-headline font-black text-primary">{formatPrice(item.price)}</span>
+                      <div className="inline-flex items-center border border-on-surface">
+                        <button
+                          type="button"
+                          className="px-2 py-0.5 text-xs font-bold hover:bg-surface-dim"
+                          onClick={() => updateQty(item.id, -1)}
+                          aria-label="Disminuir cantidad"
+                        >
+                          -
+                        </button>
+                        <span className="px-3 text-xs font-bold">{item.qty}</span>
+                        <button
+                          type="button"
+                          className="px-2 py-0.5 text-xs font-bold hover:bg-surface-dim"
+                          onClick={() => updateQty(item.id, 1)}
+                          aria-label="Aumentar cantidad"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => removeFromCart(item.id)}
-                  className="ml-2 self-start border border-transparent p-1 text-error transition-colors duration-75 hover:border-error hover:bg-error hover:text-on-error"
-                  aria-label="Eliminar producto"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))
+                  <button
+                    type="button"
+                    onClick={() => removeFromCart(item.id)}
+                    className="ml-2 self-start border border-transparent p-1 text-error transition-colors duration-150 hover:border-error hover:bg-error hover:text-on-error"
+                    aria-label="Eliminar producto"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           )}
         </div>
 
-    {user && (
-      <div className="space-y-4 border-t-2 border-on-surface p-6">
-        <div className="flex items-center justify-between font-headline text-2xl font-black uppercase">
-          <span>Total:</span>
-          <span>{formatPrice(total)}</span>
-        </div>
-        <button
-          type="button"
-          className="btn-primary w-full py-4 text-xl"
-          onClick={() => { closeCart(); navigate('/checkout') }}
-        >
-          PROCEDER AL PAGO
-        </button>
-        <button
-          type="button"
-          onClick={closeCart}
-          className="block w-full text-center text-sm font-bold uppercase underline transition-colors duration-75 hover:text-primary"
-        >
-          Seguir comprando
-        </button>
-      </div>
-    )}
+        {user && (
+          <div className="space-y-4 border-t-2 border-on-surface p-6">
+            <div className="flex items-center justify-between font-headline text-2xl font-black uppercase">
+              <span>Total:</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+            <button
+              type="button"
+              className="btn-primary w-full py-4 text-xl"
+              onClick={() => { closeCart(); navigate('/checkout') }}
+            >
+              PROCEDER AL PAGO
+            </button>
+            <button
+              type="button"
+              onClick={closeCart}
+              className="block w-full text-center text-sm font-bold uppercase underline transition-colors duration-150 hover:text-primary"
+            >
+              Seguir comprando
+            </button>
+          </div>
+        )}
       </aside>
     </>
   )

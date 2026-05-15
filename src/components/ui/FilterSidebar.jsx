@@ -13,21 +13,21 @@ export default function FilterSidebar({
   onClearFilters
 }) {
   return (
-    <aside className="md:w-1/4">
-      <h2 className="mb-8 inline-block border-b-4 border-primary font-headline text-5xl uppercase">COMPRAR POR:</h2>
+    <aside className="md:w-1/4 md:self-start md:sticky md:top-20">
+      <h2 className="mb-5 inline-block border-b-4 border-primary font-headline text-3xl uppercase">COMPRAR POR:</h2>
 
-      <div className="comic-shadow-sm space-y-8 border-2 border-on-surface bg-surface-container p-6 font-bold italic">
+      <div className="comic-shadow-sm space-y-5 border-2 border-on-surface bg-surface-container p-4 font-bold italic">
         <div>
-          <h3 className="mb-4 font-headline text-2xl not-italic uppercase">Editoriales</h3>
-          <div className="space-y-3">
+          <h3 className="mb-2 font-headline text-base not-italic uppercase">Editoriales</h3>
+          <div className="space-y-2">
             {publishers.map((publisher) => (
               <label
                 key={publisher}
-                className="flex cursor-pointer items-center gap-2 font-body text-sm font-bold uppercase not-italic"
+                className="flex cursor-pointer items-center gap-2 font-body text-xs font-bold uppercase not-italic"
               >
                 <input
                   type="checkbox"
-                  className="h-5 w-5 rounded-none border-2 border-on-surface text-on-surface focus:ring-0"
+                  className="h-4 w-4 rounded-none border-2 border-on-surface text-on-surface focus:ring-0"
                   checked={Boolean(selectedPublishers[publisher])}
                   onChange={() => onPublisherToggle(publisher)}
                 />
@@ -38,18 +38,18 @@ export default function FilterSidebar({
         </div>
 
         <div>
-          <h3 className="mb-4 font-headline text-2xl not-italic uppercase">Filtro</h3>
-          <div className="space-y-3">
+          <h3 className="mb-2 font-headline text-base not-italic uppercase">Filtro</h3>
+          <div className="space-y-2">
             {sortOptions.map((option) => (
               <label
                 key={option.id}
-                className="flex cursor-pointer items-center gap-2 font-body text-sm font-bold uppercase not-italic"
+                className="flex cursor-pointer items-center gap-2 font-body text-xs font-bold uppercase not-italic"
               >
                 <input
                   type="radio"
                   name="sort-filter"
                   value={option.id}
-                  className="h-5 w-5 border-2 border-on-surface text-on-surface focus:ring-0"
+                  className="h-4 w-4 border-2 border-on-surface text-on-surface focus:ring-0"
                   checked={sortOrder === option.id}
                   onChange={() => onSortChange(option.id)}
                 />
@@ -59,7 +59,7 @@ export default function FilterSidebar({
           </div>
         </div>
 
-        <button type="button" onClick={onClearFilters} className="btn-primary mt-4 w-full py-2 text-lg">
+        <button type="button" onClick={onClearFilters} className="btn-primary mt-2 w-full py-1.5 text-sm">
           LIMPIAR FILTRO
         </button>
       </div>
